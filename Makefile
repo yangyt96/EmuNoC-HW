@@ -1,5 +1,5 @@
 # test name
-TEST_NAME:=axi_router
+TEST_NAME:=full_noc
 VHDL_EX:=vhd
 STOP_TIME:=100us
 
