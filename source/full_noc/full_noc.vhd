@@ -23,1432 +23,1430 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use IEEE.math_real.all;
-USE ieee.numeric_std.ALL;
+use ieee.numeric_std.all;
 use work.NOC_3D_PACKAGE.all;
 
 entity full_noc is
 
-port(
-  clk, rst          : in  std_logic;
-  local_rx          : in  flit_vector(16-1 downto 0);
-  local_vc_write_rx : in  std_logic_vector(32-1 downto 0);
-  local_incr_rx_vec : in  std_logic_vector(32-1 downto 0);
-  local_tx          : out flit_vector(16-1 downto 0);
-  local_vc_write_tx : out std_logic_vector(32-1 downto 0);
-  local_incr_tx_vec : out std_logic_vector(32-1 downto 0)
-  );
+	port (
+		clk, rst          : in Std_logic;
+		local_rx          : in flit_vector(16 - 1 downto 0);
+		local_vc_write_rx : in Std_logic_vector(32 - 1 downto 0);
+		local_incr_rx_vec : in Std_logic_vector(32 - 1 downto 0);
+		local_tx          : out flit_vector(16 - 1 downto 0);
+		local_vc_write_tx : out Std_logic_vector(32 - 1 downto 0);
+		local_incr_tx_vec : out Std_logic_vector(32 - 1 downto 0)
+	);
 end entity full_noc;
 
 architecture structural of full_noc is
-  type flit_vector_array is array (0 to 0) of flit_vector(max_port_num-1 downto 0);
-  type flit_vector_2D_array is array (0 to 3) of flit_vector_array;
-  type flit_vector_3D_array is array (0 to 3) of flit_vector_2D_array;
-
-  subtype incr_per_port is std_logic_vector(2-1 downto 0);
-  type incr_per_router is array (max_port_num-1 downto 0) of incr_per_port;
-  type incr_array is array (0 to 0) of incr_per_router;
-  type incr_2D_array is array (0 to 3) of incr_array;
-  type incr_3D_array is array (0 to 3) of incr_2D_array;
-
-
-  signal inter_data_in      : flit_vector_3D_array;
-  signal inter_data_out     : flit_vector_3D_array;
-  signal inter_incr_in      : incr_3D_array;
-  signal inter_incr_out     : incr_3D_array;
-  signal inter_vc_write_in  : incr_3D_array;
-  signal inter_vc_write_out : incr_3D_array;
-  signal data_in000, data_out000: flit_vector(3-1 downto 0);
-  signal vc_write_rx_vec000: std_logic_vector(6-1 downto 0);
-  signal incr_rx_vec000:  std_logic_vector(6-1 downto 0);
-  signal vc_write_tx_pl_vec000:  std_logic_vector(6-1 downto 0);
-  signal incr_tx_pl_vec000: std_logic_vector(6-1 downto 0);
-  signal data_in100, data_out100: flit_vector(4-1 downto 0);
-  signal vc_write_rx_vec100: std_logic_vector(8-1 downto 0);
-  signal incr_rx_vec100:  std_logic_vector(8-1 downto 0);
-  signal vc_write_tx_pl_vec100:  std_logic_vector(8-1 downto 0);
-  signal incr_tx_pl_vec100: std_logic_vector(8-1 downto 0);
-  signal data_in200, data_out200: flit_vector(4-1 downto 0);
-  signal vc_write_rx_vec200: std_logic_vector(8-1 downto 0);
-  signal incr_rx_vec200:  std_logic_vector(8-1 downto 0);
-  signal vc_write_tx_pl_vec200:  std_logic_vector(8-1 downto 0);
-  signal incr_tx_pl_vec200: std_logic_vector(8-1 downto 0);
-  signal data_in300, data_out300: flit_vector(3-1 downto 0);
-  signal vc_write_rx_vec300: std_logic_vector(6-1 downto 0);
-  signal incr_rx_vec300:  std_logic_vector(6-1 downto 0);
-  signal vc_write_tx_pl_vec300:  std_logic_vector(6-1 downto 0);
-  signal incr_tx_pl_vec300: std_logic_vector(6-1 downto 0);
-  signal data_in010, data_out010: flit_vector(4-1 downto 0);
-  signal vc_write_rx_vec010: std_logic_vector(8-1 downto 0);
-  signal incr_rx_vec010:  std_logic_vector(8-1 downto 0);
-  signal vc_write_tx_pl_vec010:  std_logic_vector(8-1 downto 0);
-  signal incr_tx_pl_vec010: std_logic_vector(8-1 downto 0);
-  signal data_in110, data_out110: flit_vector(5-1 downto 0);
-  signal vc_write_rx_vec110: std_logic_vector(10-1 downto 0);
-  signal incr_rx_vec110:  std_logic_vector(10-1 downto 0);
-  signal vc_write_tx_pl_vec110:  std_logic_vector(10-1 downto 0);
-  signal incr_tx_pl_vec110: std_logic_vector(10-1 downto 0);
-  signal data_in210, data_out210: flit_vector(5-1 downto 0);
-  signal vc_write_rx_vec210: std_logic_vector(10-1 downto 0);
-  signal incr_rx_vec210:  std_logic_vector(10-1 downto 0);
-  signal vc_write_tx_pl_vec210:  std_logic_vector(10-1 downto 0);
-  signal incr_tx_pl_vec210: std_logic_vector(10-1 downto 0);
-  signal data_in310, data_out310: flit_vector(4-1 downto 0);
-  signal vc_write_rx_vec310: std_logic_vector(8-1 downto 0);
-  signal incr_rx_vec310:  std_logic_vector(8-1 downto 0);
-  signal vc_write_tx_pl_vec310:  std_logic_vector(8-1 downto 0);
-  signal incr_tx_pl_vec310: std_logic_vector(8-1 downto 0);
-  signal data_in020, data_out020: flit_vector(4-1 downto 0);
-  signal vc_write_rx_vec020: std_logic_vector(8-1 downto 0);
-  signal incr_rx_vec020:  std_logic_vector(8-1 downto 0);
-  signal vc_write_tx_pl_vec020:  std_logic_vector(8-1 downto 0);
-  signal incr_tx_pl_vec020: std_logic_vector(8-1 downto 0);
-  signal data_in120, data_out120: flit_vector(5-1 downto 0);
-  signal vc_write_rx_vec120: std_logic_vector(10-1 downto 0);
-  signal incr_rx_vec120:  std_logic_vector(10-1 downto 0);
-  signal vc_write_tx_pl_vec120:  std_logic_vector(10-1 downto 0);
-  signal incr_tx_pl_vec120: std_logic_vector(10-1 downto 0);
-  signal data_in220, data_out220: flit_vector(5-1 downto 0);
-  signal vc_write_rx_vec220: std_logic_vector(10-1 downto 0);
-  signal incr_rx_vec220:  std_logic_vector(10-1 downto 0);
-  signal vc_write_tx_pl_vec220:  std_logic_vector(10-1 downto 0);
-  signal incr_tx_pl_vec220: std_logic_vector(10-1 downto 0);
-  signal data_in320, data_out320: flit_vector(4-1 downto 0);
-  signal vc_write_rx_vec320: std_logic_vector(8-1 downto 0);
-  signal incr_rx_vec320:  std_logic_vector(8-1 downto 0);
-  signal vc_write_tx_pl_vec320:  std_logic_vector(8-1 downto 0);
-  signal incr_tx_pl_vec320: std_logic_vector(8-1 downto 0);
-  signal data_in030, data_out030: flit_vector(3-1 downto 0);
-  signal vc_write_rx_vec030: std_logic_vector(6-1 downto 0);
-  signal incr_rx_vec030:  std_logic_vector(6-1 downto 0);
-  signal vc_write_tx_pl_vec030:  std_logic_vector(6-1 downto 0);
-  signal incr_tx_pl_vec030: std_logic_vector(6-1 downto 0);
-  signal data_in130, data_out130: flit_vector(4-1 downto 0);
-  signal vc_write_rx_vec130: std_logic_vector(8-1 downto 0);
-  signal incr_rx_vec130:  std_logic_vector(8-1 downto 0);
-  signal vc_write_tx_pl_vec130:  std_logic_vector(8-1 downto 0);
-  signal incr_tx_pl_vec130: std_logic_vector(8-1 downto 0);
-  signal data_in230, data_out230: flit_vector(4-1 downto 0);
-  signal vc_write_rx_vec230: std_logic_vector(8-1 downto 0);
-  signal incr_rx_vec230:  std_logic_vector(8-1 downto 0);
-  signal vc_write_tx_pl_vec230:  std_logic_vector(8-1 downto 0);
-  signal incr_tx_pl_vec230: std_logic_vector(8-1 downto 0);
-  signal data_in330, data_out330: flit_vector(3-1 downto 0);
-  signal vc_write_rx_vec330: std_logic_vector(6-1 downto 0);
-  signal incr_rx_vec330:  std_logic_vector(6-1 downto 0);
-  signal vc_write_tx_pl_vec330:  std_logic_vector(6-1 downto 0);
-  signal incr_tx_pl_vec330: std_logic_vector(6-1 downto 0);
-
-        begin
-        data_in000(0) <= inter_data_in(0)(0)(0)(0);
-inter_data_out(0)(0)(0)(0) <= data_out000(0);
-incr_rx_vec000(2-1 downto 0) <= inter_incr_in(0)(0)(0)(0)(2-1 downto 0);
-inter_incr_out(0)(0)(0)(0)(2-1 downto 0) <= incr_tx_pl_vec000(2-1 downto 0);
-vc_write_rx_vec000(2-1 downto 0) <= inter_vc_write_in(0)(0)(0)(0)(2-1 downto 0);
-inter_vc_write_out(0)(0)(0)(0)(2-1 downto 0) <= vc_write_tx_pl_vec000(2-1 downto 0);
-data_in000(1) <= inter_data_in(0)(0)(0)(1);
-inter_data_out(0)(0)(0)(1) <= data_out000(1);
-incr_rx_vec000(4-1 downto 2) <= inter_incr_in(0)(0)(0)(1)(2-1 downto 0);
-inter_incr_out(0)(0)(0)(1)(2-1 downto 0) <= incr_tx_pl_vec000(4-1 downto 2);
-vc_write_rx_vec000(4-1 downto 2) <= inter_vc_write_in(0)(0)(0)(1)(2-1 downto 0);
-inter_vc_write_out(0)(0)(0)(1)(2-1 downto 0) <= vc_write_tx_pl_vec000(4-1 downto 2);
-
-inter_data_in(0)(0)(0)(1) <= inter_data_out(0)(0+1)(0)(3);
-
-inter_incr_in(0)(0)(0)(1) <= inter_incr_out(0)(0+1)(0)(3);
-
-inter_vc_write_in(0)(0)(0)(1) <= inter_vc_write_out(0)(0+1)(0)(3);
-data_in000(2) <= inter_data_in(0)(0)(0)(2);
-inter_data_out(0)(0)(0)(2) <= data_out000(2);
-incr_rx_vec000(6-1 downto 4) <= inter_incr_in(0)(0)(0)(2)(2-1 downto 0);
-inter_incr_out(0)(0)(0)(2)(2-1 downto 0) <= incr_tx_pl_vec000(6-1 downto 4);
-vc_write_rx_vec000(6-1 downto 4) <= inter_vc_write_in(0)(0)(0)(2)(2-1 downto 0);
-inter_vc_write_out(0)(0)(0)(2)(2-1 downto 0) <= vc_write_tx_pl_vec000(6-1 downto 4);
-
-inter_data_in(0)(0)(0)(2) <= inter_data_out(0+1)(0)(0)(4);
-
-inter_incr_in(0)(0)(0)(2) <= inter_incr_out(0+1)(0)(0)(4);
-
-inter_vc_write_in(0)(0)(0)(2) <= inter_vc_write_out(0+1)(0)(0)(4);
-
-inter_data_in(0)(0)(0)(0) <= local_rx(0);
-local_tx(0)	          <= inter_data_out(0)(0)(0)(0);
-
-inter_incr_in(0)(0)(0)(0)(2-1 downto 0) <= local_incr_rx_vec(2-1 downto 0);
-local_incr_tx_vec(2-1 downto 0) <= inter_incr_out(0)(0)(0)(0)(2-1 downto 0);
-
-inter_vc_write_in(0)(0)(0)(0)(2-1 downto 0) <= local_vc_write_rx(2-1 downto 0);
-local_vc_write_tx(2-1 downto 0) <= inter_vc_write_out(0)(0)(0)(0)(2-1 downto 0);
-
---------------------------------------------------------------------------
--- Router at x= 0 y=0 z=0
---------------------------------------------------------------------------
-router_000: entity work.router_pl
-  generic map (
-	port_num 			=> 3,
-	Xis	 			=> 0,
-	Yis	 			=> 0,
-	Zis	 			=> 0,
-	header_incl_in_packet_length	=> true,
-	port_exist			=> (0,1,2),
-	vc_num_vec			=> (2, 2, 2),
-	vc_num_out_vec			=> (2, 2, 2),
-	vc_depth_array			=> ((2, 2), (2, 2), (2, 2)),
-	vc_depth_out_array		=> ((2, 2), (2, 2), (2, 2)),
-	rout_algo			=> "XYZ"
-	)
-  port map (
-	clk 			=> clk,
-	rst 			=> rst,
-	data_rx	 		=> data_in000,
-	vc_write_rx_vec		=> vc_write_rx_vec000,
-	incr_rx_vec		=> incr_rx_vec000,
-	data_tx_pl		=> data_out000,
-	vc_write_tx_pl_vec	=> vc_write_tx_pl_vec000,
-	incr_tx_pl_vec		=> incr_tx_pl_vec000
-	);
---------------------------------------------------------------------------
--- Router port connections to adjacent routers
---------------------------------------------------------------------------
-data_in100(0) <= inter_data_in(1)(0)(0)(0);
-inter_data_out(1)(0)(0)(0) <= data_out100(0);
-incr_rx_vec100(2-1 downto 0) <= inter_incr_in(1)(0)(0)(0)(2-1 downto 0);
-inter_incr_out(1)(0)(0)(0)(2-1 downto 0) <= incr_tx_pl_vec100(2-1 downto 0);
-vc_write_rx_vec100(2-1 downto 0) <= inter_vc_write_in(1)(0)(0)(0)(2-1 downto 0);
-inter_vc_write_out(1)(0)(0)(0)(2-1 downto 0) <= vc_write_tx_pl_vec100(2-1 downto 0);
-data_in100(1) <= inter_data_in(1)(0)(0)(1);
-inter_data_out(1)(0)(0)(1) <= data_out100(1);
-incr_rx_vec100(4-1 downto 2) <= inter_incr_in(1)(0)(0)(1)(2-1 downto 0);
-inter_incr_out(1)(0)(0)(1)(2-1 downto 0) <= incr_tx_pl_vec100(4-1 downto 2);
-vc_write_rx_vec100(4-1 downto 2) <= inter_vc_write_in(1)(0)(0)(1)(2-1 downto 0);
-inter_vc_write_out(1)(0)(0)(1)(2-1 downto 0) <= vc_write_tx_pl_vec100(4-1 downto 2);
-
-inter_data_in(1)(0)(0)(1) <= inter_data_out(1)(0+1)(0)(3);
-
-inter_incr_in(1)(0)(0)(1) <= inter_incr_out(1)(0+1)(0)(3);
-
-inter_vc_write_in(1)(0)(0)(1) <= inter_vc_write_out(1)(0+1)(0)(3);
-data_in100(2) <= inter_data_in(1)(0)(0)(2);
-inter_data_out(1)(0)(0)(2) <= data_out100(2);
-incr_rx_vec100(6-1 downto 4) <= inter_incr_in(1)(0)(0)(2)(2-1 downto 0);
-inter_incr_out(1)(0)(0)(2)(2-1 downto 0) <= incr_tx_pl_vec100(6-1 downto 4);
-vc_write_rx_vec100(6-1 downto 4) <= inter_vc_write_in(1)(0)(0)(2)(2-1 downto 0);
-inter_vc_write_out(1)(0)(0)(2)(2-1 downto 0) <= vc_write_tx_pl_vec100(6-1 downto 4);
-
-inter_data_in(1)(0)(0)(2) <= inter_data_out(1+1)(0)(0)(4);
-
-inter_incr_in(1)(0)(0)(2) <= inter_incr_out(1+1)(0)(0)(4);
-
-inter_vc_write_in(1)(0)(0)(2) <= inter_vc_write_out(1+1)(0)(0)(4);
-data_in100(3) <= inter_data_in(1)(0)(0)(4);
-inter_data_out(1)(0)(0)(4) <= data_out100(3);
-incr_rx_vec100(8-1 downto 6) <= inter_incr_in(1)(0)(0)(4)(2-1 downto 0);
-inter_incr_out(1)(0)(0)(4)(2-1 downto 0) <= incr_tx_pl_vec100(8-1 downto 6);
-vc_write_rx_vec100(8-1 downto 6) <= inter_vc_write_in(1)(0)(0)(4)(2-1 downto 0);
-inter_vc_write_out(1)(0)(0)(4)(2-1 downto 0) <= vc_write_tx_pl_vec100(8-1 downto 6);
-
-inter_data_in(1)(0)(0)(4) <= inter_data_out(1-1)(0)(0)(2);
-
-inter_incr_in(1)(0)(0)(4) <= inter_incr_out(1-1)(0)(0)(2);
-
-inter_vc_write_in(1)(0)(0)(4) <= inter_vc_write_out(1-1)(0)(0)(2);
-
-inter_data_in(1)(0)(0)(0) <= local_rx(1);
-local_tx(1)	          <= inter_data_out(1)(0)(0)(0);
-
-inter_incr_in(1)(0)(0)(0)(2-1 downto 0) <= local_incr_rx_vec(4-1 downto 2);
-local_incr_tx_vec(4-1 downto 2) <= inter_incr_out(1)(0)(0)(0)(2-1 downto 0);
-
-inter_vc_write_in(1)(0)(0)(0)(2-1 downto 0) <= local_vc_write_rx(4-1 downto 2);
-local_vc_write_tx(4-1 downto 2) <= inter_vc_write_out(1)(0)(0)(0)(2-1 downto 0);
-
---------------------------------------------------------------------------
--- Router at x= 1 y=0 z=0
---------------------------------------------------------------------------
-router_100: entity work.router_pl
-  generic map (
-	port_num 			=> 4,
-	Xis	 			=> 1,
-	Yis	 			=> 0,
-	Zis	 			=> 0,
-	header_incl_in_packet_length	=> true,
-	port_exist			=> (0,1,2,4),
-	vc_num_vec			=> (2, 2, 2, 2),
-	vc_num_out_vec			=> (2, 2, 2, 2),
-	vc_depth_array			=> ((2, 2), (2, 2), (2, 2), (2, 2)),
-	vc_depth_out_array		=> ((2, 2), (2, 2), (2, 2), (2, 2)),
-	rout_algo			=> "XYZ"
-	)
-  port map (
-	clk 			=> clk,
-	rst 			=> rst,
-	data_rx	 		=> data_in100,
-	vc_write_rx_vec		=> vc_write_rx_vec100,
-	incr_rx_vec		=> incr_rx_vec100,
-	data_tx_pl		=> data_out100,
-	vc_write_tx_pl_vec	=> vc_write_tx_pl_vec100,
-	incr_tx_pl_vec		=> incr_tx_pl_vec100
-	);
---------------------------------------------------------------------------
--- Router port connections to adjacent routers
---------------------------------------------------------------------------
-data_in200(0) <= inter_data_in(2)(0)(0)(0);
-inter_data_out(2)(0)(0)(0) <= data_out200(0);
-incr_rx_vec200(2-1 downto 0) <= inter_incr_in(2)(0)(0)(0)(2-1 downto 0);
-inter_incr_out(2)(0)(0)(0)(2-1 downto 0) <= incr_tx_pl_vec200(2-1 downto 0);
-vc_write_rx_vec200(2-1 downto 0) <= inter_vc_write_in(2)(0)(0)(0)(2-1 downto 0);
-inter_vc_write_out(2)(0)(0)(0)(2-1 downto 0) <= vc_write_tx_pl_vec200(2-1 downto 0);
-data_in200(1) <= inter_data_in(2)(0)(0)(1);
-inter_data_out(2)(0)(0)(1) <= data_out200(1);
-incr_rx_vec200(4-1 downto 2) <= inter_incr_in(2)(0)(0)(1)(2-1 downto 0);
-inter_incr_out(2)(0)(0)(1)(2-1 downto 0) <= incr_tx_pl_vec200(4-1 downto 2);
-vc_write_rx_vec200(4-1 downto 2) <= inter_vc_write_in(2)(0)(0)(1)(2-1 downto 0);
-inter_vc_write_out(2)(0)(0)(1)(2-1 downto 0) <= vc_write_tx_pl_vec200(4-1 downto 2);
-
-inter_data_in(2)(0)(0)(1) <= inter_data_out(2)(0+1)(0)(3);
-
-inter_incr_in(2)(0)(0)(1) <= inter_incr_out(2)(0+1)(0)(3);
-
-inter_vc_write_in(2)(0)(0)(1) <= inter_vc_write_out(2)(0+1)(0)(3);
-data_in200(2) <= inter_data_in(2)(0)(0)(2);
-inter_data_out(2)(0)(0)(2) <= data_out200(2);
-incr_rx_vec200(6-1 downto 4) <= inter_incr_in(2)(0)(0)(2)(2-1 downto 0);
-inter_incr_out(2)(0)(0)(2)(2-1 downto 0) <= incr_tx_pl_vec200(6-1 downto 4);
-vc_write_rx_vec200(6-1 downto 4) <= inter_vc_write_in(2)(0)(0)(2)(2-1 downto 0);
-inter_vc_write_out(2)(0)(0)(2)(2-1 downto 0) <= vc_write_tx_pl_vec200(6-1 downto 4);
-
-inter_data_in(2)(0)(0)(2) <= inter_data_out(2+1)(0)(0)(4);
-
-inter_incr_in(2)(0)(0)(2) <= inter_incr_out(2+1)(0)(0)(4);
-
-inter_vc_write_in(2)(0)(0)(2) <= inter_vc_write_out(2+1)(0)(0)(4);
-data_in200(3) <= inter_data_in(2)(0)(0)(4);
-inter_data_out(2)(0)(0)(4) <= data_out200(3);
-incr_rx_vec200(8-1 downto 6) <= inter_incr_in(2)(0)(0)(4)(2-1 downto 0);
-inter_incr_out(2)(0)(0)(4)(2-1 downto 0) <= incr_tx_pl_vec200(8-1 downto 6);
-vc_write_rx_vec200(8-1 downto 6) <= inter_vc_write_in(2)(0)(0)(4)(2-1 downto 0);
-inter_vc_write_out(2)(0)(0)(4)(2-1 downto 0) <= vc_write_tx_pl_vec200(8-1 downto 6);
-
-inter_data_in(2)(0)(0)(4) <= inter_data_out(2-1)(0)(0)(2);
-
-inter_incr_in(2)(0)(0)(4) <= inter_incr_out(2-1)(0)(0)(2);
-
-inter_vc_write_in(2)(0)(0)(4) <= inter_vc_write_out(2-1)(0)(0)(2);
-
-inter_data_in(2)(0)(0)(0) <= local_rx(2);
-local_tx(2)	          <= inter_data_out(2)(0)(0)(0);
-
-inter_incr_in(2)(0)(0)(0)(2-1 downto 0) <= local_incr_rx_vec(6-1 downto 4);
-local_incr_tx_vec(6-1 downto 4) <= inter_incr_out(2)(0)(0)(0)(2-1 downto 0);
-
-inter_vc_write_in(2)(0)(0)(0)(2-1 downto 0) <= local_vc_write_rx(6-1 downto 4);
-local_vc_write_tx(6-1 downto 4) <= inter_vc_write_out(2)(0)(0)(0)(2-1 downto 0);
-
---------------------------------------------------------------------------
--- Router at x= 2 y=0 z=0
---------------------------------------------------------------------------
-router_200: entity work.router_pl
-  generic map (
-	port_num 			=> 4,
-	Xis	 			=> 2,
-	Yis	 			=> 0,
-	Zis	 			=> 0,
-	header_incl_in_packet_length	=> true,
-	port_exist			=> (0,1,2,4),
-	vc_num_vec			=> (2, 2, 2, 2),
-	vc_num_out_vec			=> (2, 2, 2, 2),
-	vc_depth_array			=> ((2, 2), (2, 2), (2, 2), (2, 2)),
-	vc_depth_out_array		=> ((2, 2), (2, 2), (2, 2), (2, 2)),
-	rout_algo			=> "XYZ"
-	)
-  port map (
-	clk 			=> clk,
-	rst 			=> rst,
-	data_rx	 		=> data_in200,
-	vc_write_rx_vec		=> vc_write_rx_vec200,
-	incr_rx_vec		=> incr_rx_vec200,
-	data_tx_pl		=> data_out200,
-	vc_write_tx_pl_vec	=> vc_write_tx_pl_vec200,
-	incr_tx_pl_vec		=> incr_tx_pl_vec200
-	);
---------------------------------------------------------------------------
--- Router port connections to adjacent routers
---------------------------------------------------------------------------
-data_in300(0) <= inter_data_in(3)(0)(0)(0);
-inter_data_out(3)(0)(0)(0) <= data_out300(0);
-incr_rx_vec300(2-1 downto 0) <= inter_incr_in(3)(0)(0)(0)(2-1 downto 0);
-inter_incr_out(3)(0)(0)(0)(2-1 downto 0) <= incr_tx_pl_vec300(2-1 downto 0);
-vc_write_rx_vec300(2-1 downto 0) <= inter_vc_write_in(3)(0)(0)(0)(2-1 downto 0);
-inter_vc_write_out(3)(0)(0)(0)(2-1 downto 0) <= vc_write_tx_pl_vec300(2-1 downto 0);
-data_in300(1) <= inter_data_in(3)(0)(0)(1);
-inter_data_out(3)(0)(0)(1) <= data_out300(1);
-incr_rx_vec300(4-1 downto 2) <= inter_incr_in(3)(0)(0)(1)(2-1 downto 0);
-inter_incr_out(3)(0)(0)(1)(2-1 downto 0) <= incr_tx_pl_vec300(4-1 downto 2);
-vc_write_rx_vec300(4-1 downto 2) <= inter_vc_write_in(3)(0)(0)(1)(2-1 downto 0);
-inter_vc_write_out(3)(0)(0)(1)(2-1 downto 0) <= vc_write_tx_pl_vec300(4-1 downto 2);
-
-inter_data_in(3)(0)(0)(1) <= inter_data_out(3)(0+1)(0)(3);
-
-inter_incr_in(3)(0)(0)(1) <= inter_incr_out(3)(0+1)(0)(3);
-
-inter_vc_write_in(3)(0)(0)(1) <= inter_vc_write_out(3)(0+1)(0)(3);
-data_in300(2) <= inter_data_in(3)(0)(0)(4);
-inter_data_out(3)(0)(0)(4) <= data_out300(2);
-incr_rx_vec300(6-1 downto 4) <= inter_incr_in(3)(0)(0)(4)(2-1 downto 0);
-inter_incr_out(3)(0)(0)(4)(2-1 downto 0) <= incr_tx_pl_vec300(6-1 downto 4);
-vc_write_rx_vec300(6-1 downto 4) <= inter_vc_write_in(3)(0)(0)(4)(2-1 downto 0);
-inter_vc_write_out(3)(0)(0)(4)(2-1 downto 0) <= vc_write_tx_pl_vec300(6-1 downto 4);
-
-inter_data_in(3)(0)(0)(4) <= inter_data_out(3-1)(0)(0)(2);
-
-inter_incr_in(3)(0)(0)(4) <= inter_incr_out(3-1)(0)(0)(2);
-
-inter_vc_write_in(3)(0)(0)(4) <= inter_vc_write_out(3-1)(0)(0)(2);
-
-inter_data_in(3)(0)(0)(0) <= local_rx(3);
-local_tx(3)	          <= inter_data_out(3)(0)(0)(0);
-
-inter_incr_in(3)(0)(0)(0)(2-1 downto 0) <= local_incr_rx_vec(8-1 downto 6);
-local_incr_tx_vec(8-1 downto 6) <= inter_incr_out(3)(0)(0)(0)(2-1 downto 0);
-
-inter_vc_write_in(3)(0)(0)(0)(2-1 downto 0) <= local_vc_write_rx(8-1 downto 6);
-local_vc_write_tx(8-1 downto 6) <= inter_vc_write_out(3)(0)(0)(0)(2-1 downto 0);
-
---------------------------------------------------------------------------
--- Router at x= 3 y=0 z=0
---------------------------------------------------------------------------
-router_300: entity work.router_pl
-  generic map (
-	port_num 			=> 3,
-	Xis	 			=> 3,
-	Yis	 			=> 0,
-	Zis	 			=> 0,
-	header_incl_in_packet_length	=> true,
-	port_exist			=> (0,1,4),
-	vc_num_vec			=> (2, 2, 2),
-	vc_num_out_vec			=> (2, 2, 2),
-	vc_depth_array			=> ((2, 2), (2, 2), (2, 2)),
-	vc_depth_out_array		=> ((2, 2), (2, 2), (2, 2)),
-	rout_algo			=> "XYZ"
-	)
-  port map (
-	clk 			=> clk,
-	rst 			=> rst,
-	data_rx	 		=> data_in300,
-	vc_write_rx_vec		=> vc_write_rx_vec300,
-	incr_rx_vec		=> incr_rx_vec300,
-	data_tx_pl		=> data_out300,
-	vc_write_tx_pl_vec	=> vc_write_tx_pl_vec300,
-	incr_tx_pl_vec		=> incr_tx_pl_vec300
-	);
---------------------------------------------------------------------------
--- Router port connections to adjacent routers
---------------------------------------------------------------------------
-data_in010(0) <= inter_data_in(0)(1)(0)(0);
-inter_data_out(0)(1)(0)(0) <= data_out010(0);
-incr_rx_vec010(2-1 downto 0) <= inter_incr_in(0)(1)(0)(0)(2-1 downto 0);
-inter_incr_out(0)(1)(0)(0)(2-1 downto 0) <= incr_tx_pl_vec010(2-1 downto 0);
-vc_write_rx_vec010(2-1 downto 0) <= inter_vc_write_in(0)(1)(0)(0)(2-1 downto 0);
-inter_vc_write_out(0)(1)(0)(0)(2-1 downto 0) <= vc_write_tx_pl_vec010(2-1 downto 0);
-data_in010(1) <= inter_data_in(0)(1)(0)(1);
-inter_data_out(0)(1)(0)(1) <= data_out010(1);
-incr_rx_vec010(4-1 downto 2) <= inter_incr_in(0)(1)(0)(1)(2-1 downto 0);
-inter_incr_out(0)(1)(0)(1)(2-1 downto 0) <= incr_tx_pl_vec010(4-1 downto 2);
-vc_write_rx_vec010(4-1 downto 2) <= inter_vc_write_in(0)(1)(0)(1)(2-1 downto 0);
-inter_vc_write_out(0)(1)(0)(1)(2-1 downto 0) <= vc_write_tx_pl_vec010(4-1 downto 2);
-
-inter_data_in(0)(1)(0)(1) <= inter_data_out(0)(1+1)(0)(3);
-
-inter_incr_in(0)(1)(0)(1) <= inter_incr_out(0)(1+1)(0)(3);
-
-inter_vc_write_in(0)(1)(0)(1) <= inter_vc_write_out(0)(1+1)(0)(3);
-data_in010(2) <= inter_data_in(0)(1)(0)(2);
-inter_data_out(0)(1)(0)(2) <= data_out010(2);
-incr_rx_vec010(6-1 downto 4) <= inter_incr_in(0)(1)(0)(2)(2-1 downto 0);
-inter_incr_out(0)(1)(0)(2)(2-1 downto 0) <= incr_tx_pl_vec010(6-1 downto 4);
-vc_write_rx_vec010(6-1 downto 4) <= inter_vc_write_in(0)(1)(0)(2)(2-1 downto 0);
-inter_vc_write_out(0)(1)(0)(2)(2-1 downto 0) <= vc_write_tx_pl_vec010(6-1 downto 4);
-
-inter_data_in(0)(1)(0)(2) <= inter_data_out(0+1)(1)(0)(4);
-
-inter_incr_in(0)(1)(0)(2) <= inter_incr_out(0+1)(1)(0)(4);
-
-inter_vc_write_in(0)(1)(0)(2) <= inter_vc_write_out(0+1)(1)(0)(4);
-data_in010(3) <= inter_data_in(0)(1)(0)(3);
-inter_data_out(0)(1)(0)(3) <= data_out010(3);
-incr_rx_vec010(8-1 downto 6) <= inter_incr_in(0)(1)(0)(3)(2-1 downto 0);
-inter_incr_out(0)(1)(0)(3)(2-1 downto 0) <= incr_tx_pl_vec010(8-1 downto 6);
-vc_write_rx_vec010(8-1 downto 6) <= inter_vc_write_in(0)(1)(0)(3)(2-1 downto 0);
-inter_vc_write_out(0)(1)(0)(3)(2-1 downto 0) <= vc_write_tx_pl_vec010(8-1 downto 6);
-
-inter_data_in(0)(1)(0)(3) <= inter_data_out(0)(1-1)(0)(1);
-
-inter_incr_in(0)(1)(0)(3) <= inter_incr_out(0)(1-1)(0)(1);
-
-inter_vc_write_in(0)(1)(0)(3) <= inter_vc_write_out(0)(1-1)(0)(1);
-
-inter_data_in(0)(1)(0)(0) <= local_rx(4);
-local_tx(4)	          <= inter_data_out(0)(1)(0)(0);
-
-inter_incr_in(0)(1)(0)(0)(2-1 downto 0) <= local_incr_rx_vec(10-1 downto 8);
-local_incr_tx_vec(10-1 downto 8) <= inter_incr_out(0)(1)(0)(0)(2-1 downto 0);
-
-inter_vc_write_in(0)(1)(0)(0)(2-1 downto 0) <= local_vc_write_rx(10-1 downto 8);
-local_vc_write_tx(10-1 downto 8) <= inter_vc_write_out(0)(1)(0)(0)(2-1 downto 0);
-
---------------------------------------------------------------------------
--- Router at x= 0 y=1 z=0
---------------------------------------------------------------------------
-router_010: entity work.router_pl
-  generic map (
-	port_num 			=> 4,
-	Xis	 			=> 0,
-	Yis	 			=> 1,
-	Zis	 			=> 0,
-	header_incl_in_packet_length	=> true,
-	port_exist			=> (0,1,2,3),
-	vc_num_vec			=> (2, 2, 2, 2),
-	vc_num_out_vec			=> (2, 2, 2, 2),
-	vc_depth_array			=> ((2, 2), (2, 2), (2, 2), (2, 2)),
-	vc_depth_out_array		=> ((2, 2), (2, 2), (2, 2), (2, 2)),
-	rout_algo			=> "XYZ"
-	)
-  port map (
-	clk 			=> clk,
-	rst 			=> rst,
-	data_rx	 		=> data_in010,
-	vc_write_rx_vec		=> vc_write_rx_vec010,
-	incr_rx_vec		=> incr_rx_vec010,
-	data_tx_pl		=> data_out010,
-	vc_write_tx_pl_vec	=> vc_write_tx_pl_vec010,
-	incr_tx_pl_vec		=> incr_tx_pl_vec010
-	);
---------------------------------------------------------------------------
--- Router port connections to adjacent routers
---------------------------------------------------------------------------
-data_in110(0) <= inter_data_in(1)(1)(0)(0);
-inter_data_out(1)(1)(0)(0) <= data_out110(0);
-incr_rx_vec110(2-1 downto 0) <= inter_incr_in(1)(1)(0)(0)(2-1 downto 0);
-inter_incr_out(1)(1)(0)(0)(2-1 downto 0) <= incr_tx_pl_vec110(2-1 downto 0);
-vc_write_rx_vec110(2-1 downto 0) <= inter_vc_write_in(1)(1)(0)(0)(2-1 downto 0);
-inter_vc_write_out(1)(1)(0)(0)(2-1 downto 0) <= vc_write_tx_pl_vec110(2-1 downto 0);
-data_in110(1) <= inter_data_in(1)(1)(0)(1);
-inter_data_out(1)(1)(0)(1) <= data_out110(1);
-incr_rx_vec110(4-1 downto 2) <= inter_incr_in(1)(1)(0)(1)(2-1 downto 0);
-inter_incr_out(1)(1)(0)(1)(2-1 downto 0) <= incr_tx_pl_vec110(4-1 downto 2);
-vc_write_rx_vec110(4-1 downto 2) <= inter_vc_write_in(1)(1)(0)(1)(2-1 downto 0);
-inter_vc_write_out(1)(1)(0)(1)(2-1 downto 0) <= vc_write_tx_pl_vec110(4-1 downto 2);
-
-inter_data_in(1)(1)(0)(1) <= inter_data_out(1)(1+1)(0)(3);
-
-inter_incr_in(1)(1)(0)(1) <= inter_incr_out(1)(1+1)(0)(3);
-
-inter_vc_write_in(1)(1)(0)(1) <= inter_vc_write_out(1)(1+1)(0)(3);
-data_in110(2) <= inter_data_in(1)(1)(0)(2);
-inter_data_out(1)(1)(0)(2) <= data_out110(2);
-incr_rx_vec110(6-1 downto 4) <= inter_incr_in(1)(1)(0)(2)(2-1 downto 0);
-inter_incr_out(1)(1)(0)(2)(2-1 downto 0) <= incr_tx_pl_vec110(6-1 downto 4);
-vc_write_rx_vec110(6-1 downto 4) <= inter_vc_write_in(1)(1)(0)(2)(2-1 downto 0);
-inter_vc_write_out(1)(1)(0)(2)(2-1 downto 0) <= vc_write_tx_pl_vec110(6-1 downto 4);
-
-inter_data_in(1)(1)(0)(2) <= inter_data_out(1+1)(1)(0)(4);
-
-inter_incr_in(1)(1)(0)(2) <= inter_incr_out(1+1)(1)(0)(4);
-
-inter_vc_write_in(1)(1)(0)(2) <= inter_vc_write_out(1+1)(1)(0)(4);
-data_in110(3) <= inter_data_in(1)(1)(0)(3);
-inter_data_out(1)(1)(0)(3) <= data_out110(3);
-incr_rx_vec110(8-1 downto 6) <= inter_incr_in(1)(1)(0)(3)(2-1 downto 0);
-inter_incr_out(1)(1)(0)(3)(2-1 downto 0) <= incr_tx_pl_vec110(8-1 downto 6);
-vc_write_rx_vec110(8-1 downto 6) <= inter_vc_write_in(1)(1)(0)(3)(2-1 downto 0);
-inter_vc_write_out(1)(1)(0)(3)(2-1 downto 0) <= vc_write_tx_pl_vec110(8-1 downto 6);
-
-inter_data_in(1)(1)(0)(3) <= inter_data_out(1)(1-1)(0)(1);
-
-inter_incr_in(1)(1)(0)(3) <= inter_incr_out(1)(1-1)(0)(1);
-
-inter_vc_write_in(1)(1)(0)(3) <= inter_vc_write_out(1)(1-1)(0)(1);
-data_in110(4) <= inter_data_in(1)(1)(0)(4);
-inter_data_out(1)(1)(0)(4) <= data_out110(4);
-incr_rx_vec110(10-1 downto 8) <= inter_incr_in(1)(1)(0)(4)(2-1 downto 0);
-inter_incr_out(1)(1)(0)(4)(2-1 downto 0) <= incr_tx_pl_vec110(10-1 downto 8);
-vc_write_rx_vec110(10-1 downto 8) <= inter_vc_write_in(1)(1)(0)(4)(2-1 downto 0);
-inter_vc_write_out(1)(1)(0)(4)(2-1 downto 0) <= vc_write_tx_pl_vec110(10-1 downto 8);
-
-inter_data_in(1)(1)(0)(4) <= inter_data_out(1-1)(1)(0)(2);
-
-inter_incr_in(1)(1)(0)(4) <= inter_incr_out(1-1)(1)(0)(2);
-
-inter_vc_write_in(1)(1)(0)(4) <= inter_vc_write_out(1-1)(1)(0)(2);
-
-inter_data_in(1)(1)(0)(0) <= local_rx(5);
-local_tx(5)	          <= inter_data_out(1)(1)(0)(0);
-
-inter_incr_in(1)(1)(0)(0)(2-1 downto 0) <= local_incr_rx_vec(12-1 downto 10);
-local_incr_tx_vec(12-1 downto 10) <= inter_incr_out(1)(1)(0)(0)(2-1 downto 0);
-
-inter_vc_write_in(1)(1)(0)(0)(2-1 downto 0) <= local_vc_write_rx(12-1 downto 10);
-local_vc_write_tx(12-1 downto 10) <= inter_vc_write_out(1)(1)(0)(0)(2-1 downto 0);
-
---------------------------------------------------------------------------
--- Router at x= 1 y=1 z=0
---------------------------------------------------------------------------
-router_110: entity work.router_pl
-  generic map (
-	port_num 			=> 5,
-	Xis	 			=> 1,
-	Yis	 			=> 1,
-	Zis	 			=> 0,
-	header_incl_in_packet_length	=> true,
-	port_exist			=> (0,1,2,3,4),
-	vc_num_vec			=> (2, 2, 2, 2, 2),
-	vc_num_out_vec			=> (2, 2, 2, 2, 2),
-	vc_depth_array			=> ((2, 2), (2, 2), (2, 2), (2, 2), (2, 2)),
-	vc_depth_out_array		=> ((2, 2), (2, 2), (2, 2), (2, 2), (2, 2)),
-	rout_algo			=> "XYZ"
-	)
-  port map (
-	clk 			=> clk,
-	rst 			=> rst,
-	data_rx	 		=> data_in110,
-	vc_write_rx_vec		=> vc_write_rx_vec110,
-	incr_rx_vec		=> incr_rx_vec110,
-	data_tx_pl		=> data_out110,
-	vc_write_tx_pl_vec	=> vc_write_tx_pl_vec110,
-	incr_tx_pl_vec		=> incr_tx_pl_vec110
-	);
---------------------------------------------------------------------------
--- Router port connections to adjacent routers
---------------------------------------------------------------------------
-data_in210(0) <= inter_data_in(2)(1)(0)(0);
-inter_data_out(2)(1)(0)(0) <= data_out210(0);
-incr_rx_vec210(2-1 downto 0) <= inter_incr_in(2)(1)(0)(0)(2-1 downto 0);
-inter_incr_out(2)(1)(0)(0)(2-1 downto 0) <= incr_tx_pl_vec210(2-1 downto 0);
-vc_write_rx_vec210(2-1 downto 0) <= inter_vc_write_in(2)(1)(0)(0)(2-1 downto 0);
-inter_vc_write_out(2)(1)(0)(0)(2-1 downto 0) <= vc_write_tx_pl_vec210(2-1 downto 0);
-data_in210(1) <= inter_data_in(2)(1)(0)(1);
-inter_data_out(2)(1)(0)(1) <= data_out210(1);
-incr_rx_vec210(4-1 downto 2) <= inter_incr_in(2)(1)(0)(1)(2-1 downto 0);
-inter_incr_out(2)(1)(0)(1)(2-1 downto 0) <= incr_tx_pl_vec210(4-1 downto 2);
-vc_write_rx_vec210(4-1 downto 2) <= inter_vc_write_in(2)(1)(0)(1)(2-1 downto 0);
-inter_vc_write_out(2)(1)(0)(1)(2-1 downto 0) <= vc_write_tx_pl_vec210(4-1 downto 2);
-
-inter_data_in(2)(1)(0)(1) <= inter_data_out(2)(1+1)(0)(3);
-
-inter_incr_in(2)(1)(0)(1) <= inter_incr_out(2)(1+1)(0)(3);
-
-inter_vc_write_in(2)(1)(0)(1) <= inter_vc_write_out(2)(1+1)(0)(3);
-data_in210(2) <= inter_data_in(2)(1)(0)(2);
-inter_data_out(2)(1)(0)(2) <= data_out210(2);
-incr_rx_vec210(6-1 downto 4) <= inter_incr_in(2)(1)(0)(2)(2-1 downto 0);
-inter_incr_out(2)(1)(0)(2)(2-1 downto 0) <= incr_tx_pl_vec210(6-1 downto 4);
-vc_write_rx_vec210(6-1 downto 4) <= inter_vc_write_in(2)(1)(0)(2)(2-1 downto 0);
-inter_vc_write_out(2)(1)(0)(2)(2-1 downto 0) <= vc_write_tx_pl_vec210(6-1 downto 4);
-
-inter_data_in(2)(1)(0)(2) <= inter_data_out(2+1)(1)(0)(4);
-
-inter_incr_in(2)(1)(0)(2) <= inter_incr_out(2+1)(1)(0)(4);
-
-inter_vc_write_in(2)(1)(0)(2) <= inter_vc_write_out(2+1)(1)(0)(4);
-data_in210(3) <= inter_data_in(2)(1)(0)(3);
-inter_data_out(2)(1)(0)(3) <= data_out210(3);
-incr_rx_vec210(8-1 downto 6) <= inter_incr_in(2)(1)(0)(3)(2-1 downto 0);
-inter_incr_out(2)(1)(0)(3)(2-1 downto 0) <= incr_tx_pl_vec210(8-1 downto 6);
-vc_write_rx_vec210(8-1 downto 6) <= inter_vc_write_in(2)(1)(0)(3)(2-1 downto 0);
-inter_vc_write_out(2)(1)(0)(3)(2-1 downto 0) <= vc_write_tx_pl_vec210(8-1 downto 6);
-
-inter_data_in(2)(1)(0)(3) <= inter_data_out(2)(1-1)(0)(1);
-
-inter_incr_in(2)(1)(0)(3) <= inter_incr_out(2)(1-1)(0)(1);
-
-inter_vc_write_in(2)(1)(0)(3) <= inter_vc_write_out(2)(1-1)(0)(1);
-data_in210(4) <= inter_data_in(2)(1)(0)(4);
-inter_data_out(2)(1)(0)(4) <= data_out210(4);
-incr_rx_vec210(10-1 downto 8) <= inter_incr_in(2)(1)(0)(4)(2-1 downto 0);
-inter_incr_out(2)(1)(0)(4)(2-1 downto 0) <= incr_tx_pl_vec210(10-1 downto 8);
-vc_write_rx_vec210(10-1 downto 8) <= inter_vc_write_in(2)(1)(0)(4)(2-1 downto 0);
-inter_vc_write_out(2)(1)(0)(4)(2-1 downto 0) <= vc_write_tx_pl_vec210(10-1 downto 8);
-
-inter_data_in(2)(1)(0)(4) <= inter_data_out(2-1)(1)(0)(2);
-
-inter_incr_in(2)(1)(0)(4) <= inter_incr_out(2-1)(1)(0)(2);
-
-inter_vc_write_in(2)(1)(0)(4) <= inter_vc_write_out(2-1)(1)(0)(2);
-
-inter_data_in(2)(1)(0)(0) <= local_rx(6);
-local_tx(6)	          <= inter_data_out(2)(1)(0)(0);
-
-inter_incr_in(2)(1)(0)(0)(2-1 downto 0) <= local_incr_rx_vec(14-1 downto 12);
-local_incr_tx_vec(14-1 downto 12) <= inter_incr_out(2)(1)(0)(0)(2-1 downto 0);
-
-inter_vc_write_in(2)(1)(0)(0)(2-1 downto 0) <= local_vc_write_rx(14-1 downto 12);
-local_vc_write_tx(14-1 downto 12) <= inter_vc_write_out(2)(1)(0)(0)(2-1 downto 0);
-
---------------------------------------------------------------------------
--- Router at x= 2 y=1 z=0
---------------------------------------------------------------------------
-router_210: entity work.router_pl
-  generic map (
-	port_num 			=> 5,
-	Xis	 			=> 2,
-	Yis	 			=> 1,
-	Zis	 			=> 0,
-	header_incl_in_packet_length	=> true,
-	port_exist			=> (0,1,2,3,4),
-	vc_num_vec			=> (2, 2, 2, 2, 2),
-	vc_num_out_vec			=> (2, 2, 2, 2, 2),
-	vc_depth_array			=> ((2, 2), (2, 2), (2, 2), (2, 2), (2, 2)),
-	vc_depth_out_array		=> ((2, 2), (2, 2), (2, 2), (2, 2), (2, 2)),
-	rout_algo			=> "XYZ"
-	)
-  port map (
-	clk 			=> clk,
-	rst 			=> rst,
-	data_rx	 		=> data_in210,
-	vc_write_rx_vec		=> vc_write_rx_vec210,
-	incr_rx_vec		=> incr_rx_vec210,
-	data_tx_pl		=> data_out210,
-	vc_write_tx_pl_vec	=> vc_write_tx_pl_vec210,
-	incr_tx_pl_vec		=> incr_tx_pl_vec210
-	);
---------------------------------------------------------------------------
--- Router port connections to adjacent routers
---------------------------------------------------------------------------
-data_in310(0) <= inter_data_in(3)(1)(0)(0);
-inter_data_out(3)(1)(0)(0) <= data_out310(0);
-incr_rx_vec310(2-1 downto 0) <= inter_incr_in(3)(1)(0)(0)(2-1 downto 0);
-inter_incr_out(3)(1)(0)(0)(2-1 downto 0) <= incr_tx_pl_vec310(2-1 downto 0);
-vc_write_rx_vec310(2-1 downto 0) <= inter_vc_write_in(3)(1)(0)(0)(2-1 downto 0);
-inter_vc_write_out(3)(1)(0)(0)(2-1 downto 0) <= vc_write_tx_pl_vec310(2-1 downto 0);
-data_in310(1) <= inter_data_in(3)(1)(0)(1);
-inter_data_out(3)(1)(0)(1) <= data_out310(1);
-incr_rx_vec310(4-1 downto 2) <= inter_incr_in(3)(1)(0)(1)(2-1 downto 0);
-inter_incr_out(3)(1)(0)(1)(2-1 downto 0) <= incr_tx_pl_vec310(4-1 downto 2);
-vc_write_rx_vec310(4-1 downto 2) <= inter_vc_write_in(3)(1)(0)(1)(2-1 downto 0);
-inter_vc_write_out(3)(1)(0)(1)(2-1 downto 0) <= vc_write_tx_pl_vec310(4-1 downto 2);
-
-inter_data_in(3)(1)(0)(1) <= inter_data_out(3)(1+1)(0)(3);
-
-inter_incr_in(3)(1)(0)(1) <= inter_incr_out(3)(1+1)(0)(3);
-
-inter_vc_write_in(3)(1)(0)(1) <= inter_vc_write_out(3)(1+1)(0)(3);
-data_in310(2) <= inter_data_in(3)(1)(0)(3);
-inter_data_out(3)(1)(0)(3) <= data_out310(2);
-incr_rx_vec310(6-1 downto 4) <= inter_incr_in(3)(1)(0)(3)(2-1 downto 0);
-inter_incr_out(3)(1)(0)(3)(2-1 downto 0) <= incr_tx_pl_vec310(6-1 downto 4);
-vc_write_rx_vec310(6-1 downto 4) <= inter_vc_write_in(3)(1)(0)(3)(2-1 downto 0);
-inter_vc_write_out(3)(1)(0)(3)(2-1 downto 0) <= vc_write_tx_pl_vec310(6-1 downto 4);
-
-inter_data_in(3)(1)(0)(3) <= inter_data_out(3)(1-1)(0)(1);
-
-inter_incr_in(3)(1)(0)(3) <= inter_incr_out(3)(1-1)(0)(1);
-
-inter_vc_write_in(3)(1)(0)(3) <= inter_vc_write_out(3)(1-1)(0)(1);
-data_in310(3) <= inter_data_in(3)(1)(0)(4);
-inter_data_out(3)(1)(0)(4) <= data_out310(3);
-incr_rx_vec310(8-1 downto 6) <= inter_incr_in(3)(1)(0)(4)(2-1 downto 0);
-inter_incr_out(3)(1)(0)(4)(2-1 downto 0) <= incr_tx_pl_vec310(8-1 downto 6);
-vc_write_rx_vec310(8-1 downto 6) <= inter_vc_write_in(3)(1)(0)(4)(2-1 downto 0);
-inter_vc_write_out(3)(1)(0)(4)(2-1 downto 0) <= vc_write_tx_pl_vec310(8-1 downto 6);
-
-inter_data_in(3)(1)(0)(4) <= inter_data_out(3-1)(1)(0)(2);
-
-inter_incr_in(3)(1)(0)(4) <= inter_incr_out(3-1)(1)(0)(2);
-
-inter_vc_write_in(3)(1)(0)(4) <= inter_vc_write_out(3-1)(1)(0)(2);
-
-inter_data_in(3)(1)(0)(0) <= local_rx(7);
-local_tx(7)	          <= inter_data_out(3)(1)(0)(0);
-
-inter_incr_in(3)(1)(0)(0)(2-1 downto 0) <= local_incr_rx_vec(16-1 downto 14);
-local_incr_tx_vec(16-1 downto 14) <= inter_incr_out(3)(1)(0)(0)(2-1 downto 0);
-
-inter_vc_write_in(3)(1)(0)(0)(2-1 downto 0) <= local_vc_write_rx(16-1 downto 14);
-local_vc_write_tx(16-1 downto 14) <= inter_vc_write_out(3)(1)(0)(0)(2-1 downto 0);
-
---------------------------------------------------------------------------
--- Router at x= 3 y=1 z=0
---------------------------------------------------------------------------
-router_310: entity work.router_pl
-  generic map (
-	port_num 			=> 4,
-	Xis	 			=> 3,
-	Yis	 			=> 1,
-	Zis	 			=> 0,
-	header_incl_in_packet_length	=> true,
-	port_exist			=> (0,1,3,4),
-	vc_num_vec			=> (2, 2, 2, 2),
-	vc_num_out_vec			=> (2, 2, 2, 2),
-	vc_depth_array			=> ((2, 2), (2, 2), (2, 2), (2, 2)),
-	vc_depth_out_array		=> ((2, 2), (2, 2), (2, 2), (2, 2)),
-	rout_algo			=> "XYZ"
-	)
-  port map (
-	clk 			=> clk,
-	rst 			=> rst,
-	data_rx	 		=> data_in310,
-	vc_write_rx_vec		=> vc_write_rx_vec310,
-	incr_rx_vec		=> incr_rx_vec310,
-	data_tx_pl		=> data_out310,
-	vc_write_tx_pl_vec	=> vc_write_tx_pl_vec310,
-	incr_tx_pl_vec		=> incr_tx_pl_vec310
-	);
---------------------------------------------------------------------------
--- Router port connections to adjacent routers
---------------------------------------------------------------------------
-data_in020(0) <= inter_data_in(0)(2)(0)(0);
-inter_data_out(0)(2)(0)(0) <= data_out020(0);
-incr_rx_vec020(2-1 downto 0) <= inter_incr_in(0)(2)(0)(0)(2-1 downto 0);
-inter_incr_out(0)(2)(0)(0)(2-1 downto 0) <= incr_tx_pl_vec020(2-1 downto 0);
-vc_write_rx_vec020(2-1 downto 0) <= inter_vc_write_in(0)(2)(0)(0)(2-1 downto 0);
-inter_vc_write_out(0)(2)(0)(0)(2-1 downto 0) <= vc_write_tx_pl_vec020(2-1 downto 0);
-data_in020(1) <= inter_data_in(0)(2)(0)(1);
-inter_data_out(0)(2)(0)(1) <= data_out020(1);
-incr_rx_vec020(4-1 downto 2) <= inter_incr_in(0)(2)(0)(1)(2-1 downto 0);
-inter_incr_out(0)(2)(0)(1)(2-1 downto 0) <= incr_tx_pl_vec020(4-1 downto 2);
-vc_write_rx_vec020(4-1 downto 2) <= inter_vc_write_in(0)(2)(0)(1)(2-1 downto 0);
-inter_vc_write_out(0)(2)(0)(1)(2-1 downto 0) <= vc_write_tx_pl_vec020(4-1 downto 2);
-
-inter_data_in(0)(2)(0)(1) <= inter_data_out(0)(2+1)(0)(3);
-
-inter_incr_in(0)(2)(0)(1) <= inter_incr_out(0)(2+1)(0)(3);
-
-inter_vc_write_in(0)(2)(0)(1) <= inter_vc_write_out(0)(2+1)(0)(3);
-data_in020(2) <= inter_data_in(0)(2)(0)(2);
-inter_data_out(0)(2)(0)(2) <= data_out020(2);
-incr_rx_vec020(6-1 downto 4) <= inter_incr_in(0)(2)(0)(2)(2-1 downto 0);
-inter_incr_out(0)(2)(0)(2)(2-1 downto 0) <= incr_tx_pl_vec020(6-1 downto 4);
-vc_write_rx_vec020(6-1 downto 4) <= inter_vc_write_in(0)(2)(0)(2)(2-1 downto 0);
-inter_vc_write_out(0)(2)(0)(2)(2-1 downto 0) <= vc_write_tx_pl_vec020(6-1 downto 4);
-
-inter_data_in(0)(2)(0)(2) <= inter_data_out(0+1)(2)(0)(4);
-
-inter_incr_in(0)(2)(0)(2) <= inter_incr_out(0+1)(2)(0)(4);
-
-inter_vc_write_in(0)(2)(0)(2) <= inter_vc_write_out(0+1)(2)(0)(4);
-data_in020(3) <= inter_data_in(0)(2)(0)(3);
-inter_data_out(0)(2)(0)(3) <= data_out020(3);
-incr_rx_vec020(8-1 downto 6) <= inter_incr_in(0)(2)(0)(3)(2-1 downto 0);
-inter_incr_out(0)(2)(0)(3)(2-1 downto 0) <= incr_tx_pl_vec020(8-1 downto 6);
-vc_write_rx_vec020(8-1 downto 6) <= inter_vc_write_in(0)(2)(0)(3)(2-1 downto 0);
-inter_vc_write_out(0)(2)(0)(3)(2-1 downto 0) <= vc_write_tx_pl_vec020(8-1 downto 6);
-
-inter_data_in(0)(2)(0)(3) <= inter_data_out(0)(2-1)(0)(1);
-
-inter_incr_in(0)(2)(0)(3) <= inter_incr_out(0)(2-1)(0)(1);
-
-inter_vc_write_in(0)(2)(0)(3) <= inter_vc_write_out(0)(2-1)(0)(1);
-
-inter_data_in(0)(2)(0)(0) <= local_rx(8);
-local_tx(8)	          <= inter_data_out(0)(2)(0)(0);
-
-inter_incr_in(0)(2)(0)(0)(2-1 downto 0) <= local_incr_rx_vec(18-1 downto 16);
-local_incr_tx_vec(18-1 downto 16) <= inter_incr_out(0)(2)(0)(0)(2-1 downto 0);
-
-inter_vc_write_in(0)(2)(0)(0)(2-1 downto 0) <= local_vc_write_rx(18-1 downto 16);
-local_vc_write_tx(18-1 downto 16) <= inter_vc_write_out(0)(2)(0)(0)(2-1 downto 0);
-
---------------------------------------------------------------------------
--- Router at x= 0 y=2 z=0
---------------------------------------------------------------------------
-router_020: entity work.router_pl
-  generic map (
-	port_num 			=> 4,
-	Xis	 			=> 0,
-	Yis	 			=> 2,
-	Zis	 			=> 0,
-	header_incl_in_packet_length	=> true,
-	port_exist			=> (0,1,2,3),
-	vc_num_vec			=> (2, 2, 2, 2),
-	vc_num_out_vec			=> (2, 2, 2, 2),
-	vc_depth_array			=> ((2, 2), (2, 2), (2, 2), (2, 2)),
-	vc_depth_out_array		=> ((2, 2), (2, 2), (2, 2), (2, 2)),
-	rout_algo			=> "XYZ"
-	)
-  port map (
-	clk 			=> clk,
-	rst 			=> rst,
-	data_rx	 		=> data_in020,
-	vc_write_rx_vec		=> vc_write_rx_vec020,
-	incr_rx_vec		=> incr_rx_vec020,
-	data_tx_pl		=> data_out020,
-	vc_write_tx_pl_vec	=> vc_write_tx_pl_vec020,
-	incr_tx_pl_vec		=> incr_tx_pl_vec020
-	);
---------------------------------------------------------------------------
--- Router port connections to adjacent routers
---------------------------------------------------------------------------
-data_in120(0) <= inter_data_in(1)(2)(0)(0);
-inter_data_out(1)(2)(0)(0) <= data_out120(0);
-incr_rx_vec120(2-1 downto 0) <= inter_incr_in(1)(2)(0)(0)(2-1 downto 0);
-inter_incr_out(1)(2)(0)(0)(2-1 downto 0) <= incr_tx_pl_vec120(2-1 downto 0);
-vc_write_rx_vec120(2-1 downto 0) <= inter_vc_write_in(1)(2)(0)(0)(2-1 downto 0);
-inter_vc_write_out(1)(2)(0)(0)(2-1 downto 0) <= vc_write_tx_pl_vec120(2-1 downto 0);
-data_in120(1) <= inter_data_in(1)(2)(0)(1);
-inter_data_out(1)(2)(0)(1) <= data_out120(1);
-incr_rx_vec120(4-1 downto 2) <= inter_incr_in(1)(2)(0)(1)(2-1 downto 0);
-inter_incr_out(1)(2)(0)(1)(2-1 downto 0) <= incr_tx_pl_vec120(4-1 downto 2);
-vc_write_rx_vec120(4-1 downto 2) <= inter_vc_write_in(1)(2)(0)(1)(2-1 downto 0);
-inter_vc_write_out(1)(2)(0)(1)(2-1 downto 0) <= vc_write_tx_pl_vec120(4-1 downto 2);
-
-inter_data_in(1)(2)(0)(1) <= inter_data_out(1)(2+1)(0)(3);
-
-inter_incr_in(1)(2)(0)(1) <= inter_incr_out(1)(2+1)(0)(3);
-
-inter_vc_write_in(1)(2)(0)(1) <= inter_vc_write_out(1)(2+1)(0)(3);
-data_in120(2) <= inter_data_in(1)(2)(0)(2);
-inter_data_out(1)(2)(0)(2) <= data_out120(2);
-incr_rx_vec120(6-1 downto 4) <= inter_incr_in(1)(2)(0)(2)(2-1 downto 0);
-inter_incr_out(1)(2)(0)(2)(2-1 downto 0) <= incr_tx_pl_vec120(6-1 downto 4);
-vc_write_rx_vec120(6-1 downto 4) <= inter_vc_write_in(1)(2)(0)(2)(2-1 downto 0);
-inter_vc_write_out(1)(2)(0)(2)(2-1 downto 0) <= vc_write_tx_pl_vec120(6-1 downto 4);
-
-inter_data_in(1)(2)(0)(2) <= inter_data_out(1+1)(2)(0)(4);
-
-inter_incr_in(1)(2)(0)(2) <= inter_incr_out(1+1)(2)(0)(4);
-
-inter_vc_write_in(1)(2)(0)(2) <= inter_vc_write_out(1+1)(2)(0)(4);
-data_in120(3) <= inter_data_in(1)(2)(0)(3);
-inter_data_out(1)(2)(0)(3) <= data_out120(3);
-incr_rx_vec120(8-1 downto 6) <= inter_incr_in(1)(2)(0)(3)(2-1 downto 0);
-inter_incr_out(1)(2)(0)(3)(2-1 downto 0) <= incr_tx_pl_vec120(8-1 downto 6);
-vc_write_rx_vec120(8-1 downto 6) <= inter_vc_write_in(1)(2)(0)(3)(2-1 downto 0);
-inter_vc_write_out(1)(2)(0)(3)(2-1 downto 0) <= vc_write_tx_pl_vec120(8-1 downto 6);
-
-inter_data_in(1)(2)(0)(3) <= inter_data_out(1)(2-1)(0)(1);
-
-inter_incr_in(1)(2)(0)(3) <= inter_incr_out(1)(2-1)(0)(1);
-
-inter_vc_write_in(1)(2)(0)(3) <= inter_vc_write_out(1)(2-1)(0)(1);
-data_in120(4) <= inter_data_in(1)(2)(0)(4);
-inter_data_out(1)(2)(0)(4) <= data_out120(4);
-incr_rx_vec120(10-1 downto 8) <= inter_incr_in(1)(2)(0)(4)(2-1 downto 0);
-inter_incr_out(1)(2)(0)(4)(2-1 downto 0) <= incr_tx_pl_vec120(10-1 downto 8);
-vc_write_rx_vec120(10-1 downto 8) <= inter_vc_write_in(1)(2)(0)(4)(2-1 downto 0);
-inter_vc_write_out(1)(2)(0)(4)(2-1 downto 0) <= vc_write_tx_pl_vec120(10-1 downto 8);
-
-inter_data_in(1)(2)(0)(4) <= inter_data_out(1-1)(2)(0)(2);
-
-inter_incr_in(1)(2)(0)(4) <= inter_incr_out(1-1)(2)(0)(2);
-
-inter_vc_write_in(1)(2)(0)(4) <= inter_vc_write_out(1-1)(2)(0)(2);
-
-inter_data_in(1)(2)(0)(0) <= local_rx(9);
-local_tx(9)	          <= inter_data_out(1)(2)(0)(0);
-
-inter_incr_in(1)(2)(0)(0)(2-1 downto 0) <= local_incr_rx_vec(20-1 downto 18);
-local_incr_tx_vec(20-1 downto 18) <= inter_incr_out(1)(2)(0)(0)(2-1 downto 0);
-
-inter_vc_write_in(1)(2)(0)(0)(2-1 downto 0) <= local_vc_write_rx(20-1 downto 18);
-local_vc_write_tx(20-1 downto 18) <= inter_vc_write_out(1)(2)(0)(0)(2-1 downto 0);
-
---------------------------------------------------------------------------
--- Router at x= 1 y=2 z=0
---------------------------------------------------------------------------
-router_120: entity work.router_pl
-  generic map (
-	port_num 			=> 5,
-	Xis	 			=> 1,
-	Yis	 			=> 2,
-	Zis	 			=> 0,
-	header_incl_in_packet_length	=> true,
-	port_exist			=> (0,1,2,3,4),
-	vc_num_vec			=> (2, 2, 2, 2, 2),
-	vc_num_out_vec			=> (2, 2, 2, 2, 2),
-	vc_depth_array			=> ((2, 2), (2, 2), (2, 2), (2, 2), (2, 2)),
-	vc_depth_out_array		=> ((2, 2), (2, 2), (2, 2), (2, 2), (2, 2)),
-	rout_algo			=> "XYZ"
-	)
-  port map (
-	clk 			=> clk,
-	rst 			=> rst,
-	data_rx	 		=> data_in120,
-	vc_write_rx_vec		=> vc_write_rx_vec120,
-	incr_rx_vec		=> incr_rx_vec120,
-	data_tx_pl		=> data_out120,
-	vc_write_tx_pl_vec	=> vc_write_tx_pl_vec120,
-	incr_tx_pl_vec		=> incr_tx_pl_vec120
-	);
---------------------------------------------------------------------------
--- Router port connections to adjacent routers
---------------------------------------------------------------------------
-data_in220(0) <= inter_data_in(2)(2)(0)(0);
-inter_data_out(2)(2)(0)(0) <= data_out220(0);
-incr_rx_vec220(2-1 downto 0) <= inter_incr_in(2)(2)(0)(0)(2-1 downto 0);
-inter_incr_out(2)(2)(0)(0)(2-1 downto 0) <= incr_tx_pl_vec220(2-1 downto 0);
-vc_write_rx_vec220(2-1 downto 0) <= inter_vc_write_in(2)(2)(0)(0)(2-1 downto 0);
-inter_vc_write_out(2)(2)(0)(0)(2-1 downto 0) <= vc_write_tx_pl_vec220(2-1 downto 0);
-data_in220(1) <= inter_data_in(2)(2)(0)(1);
-inter_data_out(2)(2)(0)(1) <= data_out220(1);
-incr_rx_vec220(4-1 downto 2) <= inter_incr_in(2)(2)(0)(1)(2-1 downto 0);
-inter_incr_out(2)(2)(0)(1)(2-1 downto 0) <= incr_tx_pl_vec220(4-1 downto 2);
-vc_write_rx_vec220(4-1 downto 2) <= inter_vc_write_in(2)(2)(0)(1)(2-1 downto 0);
-inter_vc_write_out(2)(2)(0)(1)(2-1 downto 0) <= vc_write_tx_pl_vec220(4-1 downto 2);
-
-inter_data_in(2)(2)(0)(1) <= inter_data_out(2)(2+1)(0)(3);
-
-inter_incr_in(2)(2)(0)(1) <= inter_incr_out(2)(2+1)(0)(3);
-
-inter_vc_write_in(2)(2)(0)(1) <= inter_vc_write_out(2)(2+1)(0)(3);
-data_in220(2) <= inter_data_in(2)(2)(0)(2);
-inter_data_out(2)(2)(0)(2) <= data_out220(2);
-incr_rx_vec220(6-1 downto 4) <= inter_incr_in(2)(2)(0)(2)(2-1 downto 0);
-inter_incr_out(2)(2)(0)(2)(2-1 downto 0) <= incr_tx_pl_vec220(6-1 downto 4);
-vc_write_rx_vec220(6-1 downto 4) <= inter_vc_write_in(2)(2)(0)(2)(2-1 downto 0);
-inter_vc_write_out(2)(2)(0)(2)(2-1 downto 0) <= vc_write_tx_pl_vec220(6-1 downto 4);
-
-inter_data_in(2)(2)(0)(2) <= inter_data_out(2+1)(2)(0)(4);
-
-inter_incr_in(2)(2)(0)(2) <= inter_incr_out(2+1)(2)(0)(4);
-
-inter_vc_write_in(2)(2)(0)(2) <= inter_vc_write_out(2+1)(2)(0)(4);
-data_in220(3) <= inter_data_in(2)(2)(0)(3);
-inter_data_out(2)(2)(0)(3) <= data_out220(3);
-incr_rx_vec220(8-1 downto 6) <= inter_incr_in(2)(2)(0)(3)(2-1 downto 0);
-inter_incr_out(2)(2)(0)(3)(2-1 downto 0) <= incr_tx_pl_vec220(8-1 downto 6);
-vc_write_rx_vec220(8-1 downto 6) <= inter_vc_write_in(2)(2)(0)(3)(2-1 downto 0);
-inter_vc_write_out(2)(2)(0)(3)(2-1 downto 0) <= vc_write_tx_pl_vec220(8-1 downto 6);
-
-inter_data_in(2)(2)(0)(3) <= inter_data_out(2)(2-1)(0)(1);
-
-inter_incr_in(2)(2)(0)(3) <= inter_incr_out(2)(2-1)(0)(1);
-
-inter_vc_write_in(2)(2)(0)(3) <= inter_vc_write_out(2)(2-1)(0)(1);
-data_in220(4) <= inter_data_in(2)(2)(0)(4);
-inter_data_out(2)(2)(0)(4) <= data_out220(4);
-incr_rx_vec220(10-1 downto 8) <= inter_incr_in(2)(2)(0)(4)(2-1 downto 0);
-inter_incr_out(2)(2)(0)(4)(2-1 downto 0) <= incr_tx_pl_vec220(10-1 downto 8);
-vc_write_rx_vec220(10-1 downto 8) <= inter_vc_write_in(2)(2)(0)(4)(2-1 downto 0);
-inter_vc_write_out(2)(2)(0)(4)(2-1 downto 0) <= vc_write_tx_pl_vec220(10-1 downto 8);
-
-inter_data_in(2)(2)(0)(4) <= inter_data_out(2-1)(2)(0)(2);
-
-inter_incr_in(2)(2)(0)(4) <= inter_incr_out(2-1)(2)(0)(2);
-
-inter_vc_write_in(2)(2)(0)(4) <= inter_vc_write_out(2-1)(2)(0)(2);
-
-inter_data_in(2)(2)(0)(0) <= local_rx(10);
-local_tx(10)	          <= inter_data_out(2)(2)(0)(0);
-
-inter_incr_in(2)(2)(0)(0)(2-1 downto 0) <= local_incr_rx_vec(22-1 downto 20);
-local_incr_tx_vec(22-1 downto 20) <= inter_incr_out(2)(2)(0)(0)(2-1 downto 0);
-
-inter_vc_write_in(2)(2)(0)(0)(2-1 downto 0) <= local_vc_write_rx(22-1 downto 20);
-local_vc_write_tx(22-1 downto 20) <= inter_vc_write_out(2)(2)(0)(0)(2-1 downto 0);
-
---------------------------------------------------------------------------
--- Router at x= 2 y=2 z=0
---------------------------------------------------------------------------
-router_220: entity work.router_pl
-  generic map (
-	port_num 			=> 5,
-	Xis	 			=> 2,
-	Yis	 			=> 2,
-	Zis	 			=> 0,
-	header_incl_in_packet_length	=> true,
-	port_exist			=> (0,1,2,3,4),
-	vc_num_vec			=> (2, 2, 2, 2, 2),
-	vc_num_out_vec			=> (2, 2, 2, 2, 2),
-	vc_depth_array			=> ((2, 2), (2, 2), (2, 2), (2, 2), (2, 2)),
-	vc_depth_out_array		=> ((2, 2), (2, 2), (2, 2), (2, 2), (2, 2)),
-	rout_algo			=> "XYZ"
-	)
-  port map (
-	clk 			=> clk,
-	rst 			=> rst,
-	data_rx	 		=> data_in220,
-	vc_write_rx_vec		=> vc_write_rx_vec220,
-	incr_rx_vec		=> incr_rx_vec220,
-	data_tx_pl		=> data_out220,
-	vc_write_tx_pl_vec	=> vc_write_tx_pl_vec220,
-	incr_tx_pl_vec		=> incr_tx_pl_vec220
-	);
---------------------------------------------------------------------------
--- Router port connections to adjacent routers
---------------------------------------------------------------------------
-data_in320(0) <= inter_data_in(3)(2)(0)(0);
-inter_data_out(3)(2)(0)(0) <= data_out320(0);
-incr_rx_vec320(2-1 downto 0) <= inter_incr_in(3)(2)(0)(0)(2-1 downto 0);
-inter_incr_out(3)(2)(0)(0)(2-1 downto 0) <= incr_tx_pl_vec320(2-1 downto 0);
-vc_write_rx_vec320(2-1 downto 0) <= inter_vc_write_in(3)(2)(0)(0)(2-1 downto 0);
-inter_vc_write_out(3)(2)(0)(0)(2-1 downto 0) <= vc_write_tx_pl_vec320(2-1 downto 0);
-data_in320(1) <= inter_data_in(3)(2)(0)(1);
-inter_data_out(3)(2)(0)(1) <= data_out320(1);
-incr_rx_vec320(4-1 downto 2) <= inter_incr_in(3)(2)(0)(1)(2-1 downto 0);
-inter_incr_out(3)(2)(0)(1)(2-1 downto 0) <= incr_tx_pl_vec320(4-1 downto 2);
-vc_write_rx_vec320(4-1 downto 2) <= inter_vc_write_in(3)(2)(0)(1)(2-1 downto 0);
-inter_vc_write_out(3)(2)(0)(1)(2-1 downto 0) <= vc_write_tx_pl_vec320(4-1 downto 2);
-
-inter_data_in(3)(2)(0)(1) <= inter_data_out(3)(2+1)(0)(3);
-
-inter_incr_in(3)(2)(0)(1) <= inter_incr_out(3)(2+1)(0)(3);
-
-inter_vc_write_in(3)(2)(0)(1) <= inter_vc_write_out(3)(2+1)(0)(3);
-data_in320(2) <= inter_data_in(3)(2)(0)(3);
-inter_data_out(3)(2)(0)(3) <= data_out320(2);
-incr_rx_vec320(6-1 downto 4) <= inter_incr_in(3)(2)(0)(3)(2-1 downto 0);
-inter_incr_out(3)(2)(0)(3)(2-1 downto 0) <= incr_tx_pl_vec320(6-1 downto 4);
-vc_write_rx_vec320(6-1 downto 4) <= inter_vc_write_in(3)(2)(0)(3)(2-1 downto 0);
-inter_vc_write_out(3)(2)(0)(3)(2-1 downto 0) <= vc_write_tx_pl_vec320(6-1 downto 4);
-
-inter_data_in(3)(2)(0)(3) <= inter_data_out(3)(2-1)(0)(1);
-
-inter_incr_in(3)(2)(0)(3) <= inter_incr_out(3)(2-1)(0)(1);
-
-inter_vc_write_in(3)(2)(0)(3) <= inter_vc_write_out(3)(2-1)(0)(1);
-data_in320(3) <= inter_data_in(3)(2)(0)(4);
-inter_data_out(3)(2)(0)(4) <= data_out320(3);
-incr_rx_vec320(8-1 downto 6) <= inter_incr_in(3)(2)(0)(4)(2-1 downto 0);
-inter_incr_out(3)(2)(0)(4)(2-1 downto 0) <= incr_tx_pl_vec320(8-1 downto 6);
-vc_write_rx_vec320(8-1 downto 6) <= inter_vc_write_in(3)(2)(0)(4)(2-1 downto 0);
-inter_vc_write_out(3)(2)(0)(4)(2-1 downto 0) <= vc_write_tx_pl_vec320(8-1 downto 6);
-
-inter_data_in(3)(2)(0)(4) <= inter_data_out(3-1)(2)(0)(2);
-
-inter_incr_in(3)(2)(0)(4) <= inter_incr_out(3-1)(2)(0)(2);
-
-inter_vc_write_in(3)(2)(0)(4) <= inter_vc_write_out(3-1)(2)(0)(2);
-
-inter_data_in(3)(2)(0)(0) <= local_rx(11);
-local_tx(11)	          <= inter_data_out(3)(2)(0)(0);
-
-inter_incr_in(3)(2)(0)(0)(2-1 downto 0) <= local_incr_rx_vec(24-1 downto 22);
-local_incr_tx_vec(24-1 downto 22) <= inter_incr_out(3)(2)(0)(0)(2-1 downto 0);
-
-inter_vc_write_in(3)(2)(0)(0)(2-1 downto 0) <= local_vc_write_rx(24-1 downto 22);
-local_vc_write_tx(24-1 downto 22) <= inter_vc_write_out(3)(2)(0)(0)(2-1 downto 0);
-
---------------------------------------------------------------------------
--- Router at x= 3 y=2 z=0
---------------------------------------------------------------------------
-router_320: entity work.router_pl
-  generic map (
-	port_num 			=> 4,
-	Xis	 			=> 3,
-	Yis	 			=> 2,
-	Zis	 			=> 0,
-	header_incl_in_packet_length	=> true,
-	port_exist			=> (0,1,3,4),
-	vc_num_vec			=> (2, 2, 2, 2),
-	vc_num_out_vec			=> (2, 2, 2, 2),
-	vc_depth_array			=> ((2, 2), (2, 2), (2, 2), (2, 2)),
-	vc_depth_out_array		=> ((2, 2), (2, 2), (2, 2), (2, 2)),
-	rout_algo			=> "XYZ"
-	)
-  port map (
-	clk 			=> clk,
-	rst 			=> rst,
-	data_rx	 		=> data_in320,
-	vc_write_rx_vec		=> vc_write_rx_vec320,
-	incr_rx_vec		=> incr_rx_vec320,
-	data_tx_pl		=> data_out320,
-	vc_write_tx_pl_vec	=> vc_write_tx_pl_vec320,
-	incr_tx_pl_vec		=> incr_tx_pl_vec320
-	);
---------------------------------------------------------------------------
--- Router port connections to adjacent routers
---------------------------------------------------------------------------
-data_in030(0) <= inter_data_in(0)(3)(0)(0);
-inter_data_out(0)(3)(0)(0) <= data_out030(0);
-incr_rx_vec030(2-1 downto 0) <= inter_incr_in(0)(3)(0)(0)(2-1 downto 0);
-inter_incr_out(0)(3)(0)(0)(2-1 downto 0) <= incr_tx_pl_vec030(2-1 downto 0);
-vc_write_rx_vec030(2-1 downto 0) <= inter_vc_write_in(0)(3)(0)(0)(2-1 downto 0);
-inter_vc_write_out(0)(3)(0)(0)(2-1 downto 0) <= vc_write_tx_pl_vec030(2-1 downto 0);
-data_in030(1) <= inter_data_in(0)(3)(0)(2);
-inter_data_out(0)(3)(0)(2) <= data_out030(1);
-incr_rx_vec030(4-1 downto 2) <= inter_incr_in(0)(3)(0)(2)(2-1 downto 0);
-inter_incr_out(0)(3)(0)(2)(2-1 downto 0) <= incr_tx_pl_vec030(4-1 downto 2);
-vc_write_rx_vec030(4-1 downto 2) <= inter_vc_write_in(0)(3)(0)(2)(2-1 downto 0);
-inter_vc_write_out(0)(3)(0)(2)(2-1 downto 0) <= vc_write_tx_pl_vec030(4-1 downto 2);
-
-inter_data_in(0)(3)(0)(2) <= inter_data_out(0+1)(3)(0)(4);
-
-inter_incr_in(0)(3)(0)(2) <= inter_incr_out(0+1)(3)(0)(4);
-
-inter_vc_write_in(0)(3)(0)(2) <= inter_vc_write_out(0+1)(3)(0)(4);
-data_in030(2) <= inter_data_in(0)(3)(0)(3);
-inter_data_out(0)(3)(0)(3) <= data_out030(2);
-incr_rx_vec030(6-1 downto 4) <= inter_incr_in(0)(3)(0)(3)(2-1 downto 0);
-inter_incr_out(0)(3)(0)(3)(2-1 downto 0) <= incr_tx_pl_vec030(6-1 downto 4);
-vc_write_rx_vec030(6-1 downto 4) <= inter_vc_write_in(0)(3)(0)(3)(2-1 downto 0);
-inter_vc_write_out(0)(3)(0)(3)(2-1 downto 0) <= vc_write_tx_pl_vec030(6-1 downto 4);
-
-inter_data_in(0)(3)(0)(3) <= inter_data_out(0)(3-1)(0)(1);
-
-inter_incr_in(0)(3)(0)(3) <= inter_incr_out(0)(3-1)(0)(1);
-
-inter_vc_write_in(0)(3)(0)(3) <= inter_vc_write_out(0)(3-1)(0)(1);
-
-inter_data_in(0)(3)(0)(0) <= local_rx(12);
-local_tx(12)	          <= inter_data_out(0)(3)(0)(0);
-
-inter_incr_in(0)(3)(0)(0)(2-1 downto 0) <= local_incr_rx_vec(26-1 downto 24);
-local_incr_tx_vec(26-1 downto 24) <= inter_incr_out(0)(3)(0)(0)(2-1 downto 0);
-
-inter_vc_write_in(0)(3)(0)(0)(2-1 downto 0) <= local_vc_write_rx(26-1 downto 24);
-local_vc_write_tx(26-1 downto 24) <= inter_vc_write_out(0)(3)(0)(0)(2-1 downto 0);
-
---------------------------------------------------------------------------
--- Router at x= 0 y=3 z=0
---------------------------------------------------------------------------
-router_030: entity work.router_pl
-  generic map (
-	port_num 			=> 3,
-	Xis	 			=> 0,
-	Yis	 			=> 3,
-	Zis	 			=> 0,
-	header_incl_in_packet_length	=> true,
-	port_exist			=> (0,2,3),
-	vc_num_vec			=> (2, 2, 2),
-	vc_num_out_vec			=> (2, 2, 2),
-	vc_depth_array			=> ((2, 2), (2, 2), (2, 2)),
-	vc_depth_out_array		=> ((2, 2), (2, 2), (2, 2)),
-	rout_algo			=> "XYZ"
-	)
-  port map (
-	clk 			=> clk,
-	rst 			=> rst,
-	data_rx	 		=> data_in030,
-	vc_write_rx_vec		=> vc_write_rx_vec030,
-	incr_rx_vec		=> incr_rx_vec030,
-	data_tx_pl		=> data_out030,
-	vc_write_tx_pl_vec	=> vc_write_tx_pl_vec030,
-	incr_tx_pl_vec		=> incr_tx_pl_vec030
-	);
---------------------------------------------------------------------------
--- Router port connections to adjacent routers
---------------------------------------------------------------------------
-data_in130(0) <= inter_data_in(1)(3)(0)(0);
-inter_data_out(1)(3)(0)(0) <= data_out130(0);
-incr_rx_vec130(2-1 downto 0) <= inter_incr_in(1)(3)(0)(0)(2-1 downto 0);
-inter_incr_out(1)(3)(0)(0)(2-1 downto 0) <= incr_tx_pl_vec130(2-1 downto 0);
-vc_write_rx_vec130(2-1 downto 0) <= inter_vc_write_in(1)(3)(0)(0)(2-1 downto 0);
-inter_vc_write_out(1)(3)(0)(0)(2-1 downto 0) <= vc_write_tx_pl_vec130(2-1 downto 0);
-data_in130(1) <= inter_data_in(1)(3)(0)(2);
-inter_data_out(1)(3)(0)(2) <= data_out130(1);
-incr_rx_vec130(4-1 downto 2) <= inter_incr_in(1)(3)(0)(2)(2-1 downto 0);
-inter_incr_out(1)(3)(0)(2)(2-1 downto 0) <= incr_tx_pl_vec130(4-1 downto 2);
-vc_write_rx_vec130(4-1 downto 2) <= inter_vc_write_in(1)(3)(0)(2)(2-1 downto 0);
-inter_vc_write_out(1)(3)(0)(2)(2-1 downto 0) <= vc_write_tx_pl_vec130(4-1 downto 2);
-
-inter_data_in(1)(3)(0)(2) <= inter_data_out(1+1)(3)(0)(4);
-
-inter_incr_in(1)(3)(0)(2) <= inter_incr_out(1+1)(3)(0)(4);
-
-inter_vc_write_in(1)(3)(0)(2) <= inter_vc_write_out(1+1)(3)(0)(4);
-data_in130(2) <= inter_data_in(1)(3)(0)(3);
-inter_data_out(1)(3)(0)(3) <= data_out130(2);
-incr_rx_vec130(6-1 downto 4) <= inter_incr_in(1)(3)(0)(3)(2-1 downto 0);
-inter_incr_out(1)(3)(0)(3)(2-1 downto 0) <= incr_tx_pl_vec130(6-1 downto 4);
-vc_write_rx_vec130(6-1 downto 4) <= inter_vc_write_in(1)(3)(0)(3)(2-1 downto 0);
-inter_vc_write_out(1)(3)(0)(3)(2-1 downto 0) <= vc_write_tx_pl_vec130(6-1 downto 4);
-
-inter_data_in(1)(3)(0)(3) <= inter_data_out(1)(3-1)(0)(1);
-
-inter_incr_in(1)(3)(0)(3) <= inter_incr_out(1)(3-1)(0)(1);
-
-inter_vc_write_in(1)(3)(0)(3) <= inter_vc_write_out(1)(3-1)(0)(1);
-data_in130(3) <= inter_data_in(1)(3)(0)(4);
-inter_data_out(1)(3)(0)(4) <= data_out130(3);
-incr_rx_vec130(8-1 downto 6) <= inter_incr_in(1)(3)(0)(4)(2-1 downto 0);
-inter_incr_out(1)(3)(0)(4)(2-1 downto 0) <= incr_tx_pl_vec130(8-1 downto 6);
-vc_write_rx_vec130(8-1 downto 6) <= inter_vc_write_in(1)(3)(0)(4)(2-1 downto 0);
-inter_vc_write_out(1)(3)(0)(4)(2-1 downto 0) <= vc_write_tx_pl_vec130(8-1 downto 6);
-
-inter_data_in(1)(3)(0)(4) <= inter_data_out(1-1)(3)(0)(2);
-
-inter_incr_in(1)(3)(0)(4) <= inter_incr_out(1-1)(3)(0)(2);
-
-inter_vc_write_in(1)(3)(0)(4) <= inter_vc_write_out(1-1)(3)(0)(2);
-
-inter_data_in(1)(3)(0)(0) <= local_rx(13);
-local_tx(13)	          <= inter_data_out(1)(3)(0)(0);
-
-inter_incr_in(1)(3)(0)(0)(2-1 downto 0) <= local_incr_rx_vec(28-1 downto 26);
-local_incr_tx_vec(28-1 downto 26) <= inter_incr_out(1)(3)(0)(0)(2-1 downto 0);
-
-inter_vc_write_in(1)(3)(0)(0)(2-1 downto 0) <= local_vc_write_rx(28-1 downto 26);
-local_vc_write_tx(28-1 downto 26) <= inter_vc_write_out(1)(3)(0)(0)(2-1 downto 0);
-
---------------------------------------------------------------------------
--- Router at x= 1 y=3 z=0
---------------------------------------------------------------------------
-router_130: entity work.router_pl
-  generic map (
-	port_num 			=> 4,
-	Xis	 			=> 1,
-	Yis	 			=> 3,
-	Zis	 			=> 0,
-	header_incl_in_packet_length	=> true,
-	port_exist			=> (0,2,3,4),
-	vc_num_vec			=> (2, 2, 2, 2),
-	vc_num_out_vec			=> (2, 2, 2, 2),
-	vc_depth_array			=> ((2, 2), (2, 2), (2, 2), (2, 2)),
-	vc_depth_out_array		=> ((2, 2), (2, 2), (2, 2), (2, 2)),
-	rout_algo			=> "XYZ"
-	)
-  port map (
-	clk 			=> clk,
-	rst 			=> rst,
-	data_rx	 		=> data_in130,
-	vc_write_rx_vec		=> vc_write_rx_vec130,
-	incr_rx_vec		=> incr_rx_vec130,
-	data_tx_pl		=> data_out130,
-	vc_write_tx_pl_vec	=> vc_write_tx_pl_vec130,
-	incr_tx_pl_vec		=> incr_tx_pl_vec130
-	);
---------------------------------------------------------------------------
--- Router port connections to adjacent routers
---------------------------------------------------------------------------
-data_in230(0) <= inter_data_in(2)(3)(0)(0);
-inter_data_out(2)(3)(0)(0) <= data_out230(0);
-incr_rx_vec230(2-1 downto 0) <= inter_incr_in(2)(3)(0)(0)(2-1 downto 0);
-inter_incr_out(2)(3)(0)(0)(2-1 downto 0) <= incr_tx_pl_vec230(2-1 downto 0);
-vc_write_rx_vec230(2-1 downto 0) <= inter_vc_write_in(2)(3)(0)(0)(2-1 downto 0);
-inter_vc_write_out(2)(3)(0)(0)(2-1 downto 0) <= vc_write_tx_pl_vec230(2-1 downto 0);
-data_in230(1) <= inter_data_in(2)(3)(0)(2);
-inter_data_out(2)(3)(0)(2) <= data_out230(1);
-incr_rx_vec230(4-1 downto 2) <= inter_incr_in(2)(3)(0)(2)(2-1 downto 0);
-inter_incr_out(2)(3)(0)(2)(2-1 downto 0) <= incr_tx_pl_vec230(4-1 downto 2);
-vc_write_rx_vec230(4-1 downto 2) <= inter_vc_write_in(2)(3)(0)(2)(2-1 downto 0);
-inter_vc_write_out(2)(3)(0)(2)(2-1 downto 0) <= vc_write_tx_pl_vec230(4-1 downto 2);
-
-inter_data_in(2)(3)(0)(2) <= inter_data_out(2+1)(3)(0)(4);
-
-inter_incr_in(2)(3)(0)(2) <= inter_incr_out(2+1)(3)(0)(4);
-
-inter_vc_write_in(2)(3)(0)(2) <= inter_vc_write_out(2+1)(3)(0)(4);
-data_in230(2) <= inter_data_in(2)(3)(0)(3);
-inter_data_out(2)(3)(0)(3) <= data_out230(2);
-incr_rx_vec230(6-1 downto 4) <= inter_incr_in(2)(3)(0)(3)(2-1 downto 0);
-inter_incr_out(2)(3)(0)(3)(2-1 downto 0) <= incr_tx_pl_vec230(6-1 downto 4);
-vc_write_rx_vec230(6-1 downto 4) <= inter_vc_write_in(2)(3)(0)(3)(2-1 downto 0);
-inter_vc_write_out(2)(3)(0)(3)(2-1 downto 0) <= vc_write_tx_pl_vec230(6-1 downto 4);
-
-inter_data_in(2)(3)(0)(3) <= inter_data_out(2)(3-1)(0)(1);
-
-inter_incr_in(2)(3)(0)(3) <= inter_incr_out(2)(3-1)(0)(1);
-
-inter_vc_write_in(2)(3)(0)(3) <= inter_vc_write_out(2)(3-1)(0)(1);
-data_in230(3) <= inter_data_in(2)(3)(0)(4);
-inter_data_out(2)(3)(0)(4) <= data_out230(3);
-incr_rx_vec230(8-1 downto 6) <= inter_incr_in(2)(3)(0)(4)(2-1 downto 0);
-inter_incr_out(2)(3)(0)(4)(2-1 downto 0) <= incr_tx_pl_vec230(8-1 downto 6);
-vc_write_rx_vec230(8-1 downto 6) <= inter_vc_write_in(2)(3)(0)(4)(2-1 downto 0);
-inter_vc_write_out(2)(3)(0)(4)(2-1 downto 0) <= vc_write_tx_pl_vec230(8-1 downto 6);
-
-inter_data_in(2)(3)(0)(4) <= inter_data_out(2-1)(3)(0)(2);
-
-inter_incr_in(2)(3)(0)(4) <= inter_incr_out(2-1)(3)(0)(2);
-
-inter_vc_write_in(2)(3)(0)(4) <= inter_vc_write_out(2-1)(3)(0)(2);
-
-inter_data_in(2)(3)(0)(0) <= local_rx(14);
-local_tx(14)	          <= inter_data_out(2)(3)(0)(0);
-
-inter_incr_in(2)(3)(0)(0)(2-1 downto 0) <= local_incr_rx_vec(30-1 downto 28);
-local_incr_tx_vec(30-1 downto 28) <= inter_incr_out(2)(3)(0)(0)(2-1 downto 0);
-
-inter_vc_write_in(2)(3)(0)(0)(2-1 downto 0) <= local_vc_write_rx(30-1 downto 28);
-local_vc_write_tx(30-1 downto 28) <= inter_vc_write_out(2)(3)(0)(0)(2-1 downto 0);
-
---------------------------------------------------------------------------
--- Router at x= 2 y=3 z=0
---------------------------------------------------------------------------
-router_230: entity work.router_pl
-  generic map (
-	port_num 			=> 4,
-	Xis	 			=> 2,
-	Yis	 			=> 3,
-	Zis	 			=> 0,
-	header_incl_in_packet_length	=> true,
-	port_exist			=> (0,2,3,4),
-	vc_num_vec			=> (2, 2, 2, 2),
-	vc_num_out_vec			=> (2, 2, 2, 2),
-	vc_depth_array			=> ((2, 2), (2, 2), (2, 2), (2, 2)),
-	vc_depth_out_array		=> ((2, 2), (2, 2), (2, 2), (2, 2)),
-	rout_algo			=> "XYZ"
-	)
-  port map (
-	clk 			=> clk,
-	rst 			=> rst,
-	data_rx	 		=> data_in230,
-	vc_write_rx_vec		=> vc_write_rx_vec230,
-	incr_rx_vec		=> incr_rx_vec230,
-	data_tx_pl		=> data_out230,
-	vc_write_tx_pl_vec	=> vc_write_tx_pl_vec230,
-	incr_tx_pl_vec		=> incr_tx_pl_vec230
-	);
---------------------------------------------------------------------------
--- Router port connections to adjacent routers
---------------------------------------------------------------------------
-data_in330(0) <= inter_data_in(3)(3)(0)(0);
-inter_data_out(3)(3)(0)(0) <= data_out330(0);
-incr_rx_vec330(2-1 downto 0) <= inter_incr_in(3)(3)(0)(0)(2-1 downto 0);
-inter_incr_out(3)(3)(0)(0)(2-1 downto 0) <= incr_tx_pl_vec330(2-1 downto 0);
-vc_write_rx_vec330(2-1 downto 0) <= inter_vc_write_in(3)(3)(0)(0)(2-1 downto 0);
-inter_vc_write_out(3)(3)(0)(0)(2-1 downto 0) <= vc_write_tx_pl_vec330(2-1 downto 0);
-data_in330(1) <= inter_data_in(3)(3)(0)(3);
-inter_data_out(3)(3)(0)(3) <= data_out330(1);
-incr_rx_vec330(4-1 downto 2) <= inter_incr_in(3)(3)(0)(3)(2-1 downto 0);
-inter_incr_out(3)(3)(0)(3)(2-1 downto 0) <= incr_tx_pl_vec330(4-1 downto 2);
-vc_write_rx_vec330(4-1 downto 2) <= inter_vc_write_in(3)(3)(0)(3)(2-1 downto 0);
-inter_vc_write_out(3)(3)(0)(3)(2-1 downto 0) <= vc_write_tx_pl_vec330(4-1 downto 2);
-
-inter_data_in(3)(3)(0)(3) <= inter_data_out(3)(3-1)(0)(1);
-
-inter_incr_in(3)(3)(0)(3) <= inter_incr_out(3)(3-1)(0)(1);
-
-inter_vc_write_in(3)(3)(0)(3) <= inter_vc_write_out(3)(3-1)(0)(1);
-data_in330(2) <= inter_data_in(3)(3)(0)(4);
-inter_data_out(3)(3)(0)(4) <= data_out330(2);
-incr_rx_vec330(6-1 downto 4) <= inter_incr_in(3)(3)(0)(4)(2-1 downto 0);
-inter_incr_out(3)(3)(0)(4)(2-1 downto 0) <= incr_tx_pl_vec330(6-1 downto 4);
-vc_write_rx_vec330(6-1 downto 4) <= inter_vc_write_in(3)(3)(0)(4)(2-1 downto 0);
-inter_vc_write_out(3)(3)(0)(4)(2-1 downto 0) <= vc_write_tx_pl_vec330(6-1 downto 4);
-
-inter_data_in(3)(3)(0)(4) <= inter_data_out(3-1)(3)(0)(2);
-
-inter_incr_in(3)(3)(0)(4) <= inter_incr_out(3-1)(3)(0)(2);
-
-inter_vc_write_in(3)(3)(0)(4) <= inter_vc_write_out(3-1)(3)(0)(2);
-
-inter_data_in(3)(3)(0)(0) <= local_rx(15);
-local_tx(15)	          <= inter_data_out(3)(3)(0)(0);
-
-inter_incr_in(3)(3)(0)(0)(2-1 downto 0) <= local_incr_rx_vec(32-1 downto 30);
-local_incr_tx_vec(32-1 downto 30) <= inter_incr_out(3)(3)(0)(0)(2-1 downto 0);
-
-inter_vc_write_in(3)(3)(0)(0)(2-1 downto 0) <= local_vc_write_rx(32-1 downto 30);
-local_vc_write_tx(32-1 downto 30) <= inter_vc_write_out(3)(3)(0)(0)(2-1 downto 0);
-
---------------------------------------------------------------------------
--- Router at x= 3 y=3 z=0
---------------------------------------------------------------------------
-router_330: entity work.router_pl
-  generic map (
-	port_num 			=> 3,
-	Xis	 			=> 3,
-	Yis	 			=> 3,
-	Zis	 			=> 0,
-	header_incl_in_packet_length	=> true,
-	port_exist			=> (0,3,4),
-	vc_num_vec			=> (2, 2, 2),
-	vc_num_out_vec			=> (2, 2, 2),
-	vc_depth_array			=> ((2, 2), (2, 2), (2, 2)),
-	vc_depth_out_array		=> ((2, 2), (2, 2), (2, 2)),
-	rout_algo			=> "XYZ"
-	)
-  port map (
-	clk 			=> clk,
-	rst 			=> rst,
-	data_rx	 		=> data_in330,
-	vc_write_rx_vec		=> vc_write_rx_vec330,
-	incr_rx_vec		=> incr_rx_vec330,
-	data_tx_pl		=> data_out330,
-	vc_write_tx_pl_vec	=> vc_write_tx_pl_vec330,
-	incr_tx_pl_vec		=> incr_tx_pl_vec330
-	);
---------------------------------------------------------------------------
--- Router port connections to adjacent routers
---------------------------------------------------------------------------
+	type flit_vector_array is array (0 to 0) of flit_vector(max_port_num - 1 downto 0);
+	type flit_vector_2D_array is array (0 to 3) of flit_vector_array;
+	type flit_vector_3D_array is array (0 to 3) of flit_vector_2D_array;
+
+	subtype incr_per_port is Std_logic_vector(2 - 1 downto 0);
+	type incr_per_router is array (max_port_num - 1 downto 0) of incr_per_port;
+	type incr_array is array (0 to 0) of incr_per_router;
+	type incr_2D_array is array (0 to 3) of incr_array;
+	type incr_3D_array is array (0 to 3) of incr_2D_array;
+	signal inter_data_in           : flit_vector_3D_array;
+	signal inter_data_out          : flit_vector_3D_array;
+	signal inter_incr_in           : incr_3D_array;
+	signal inter_incr_out          : incr_3D_array;
+	signal inter_vc_write_in       : incr_3D_array;
+	signal inter_vc_write_out      : incr_3D_array;
+	signal data_in000, data_out000 : flit_vector(3 - 1 downto 0);
+	signal vc_write_rx_vec000      : Std_logic_vector(6 - 1 downto 0);
+	signal incr_rx_vec000          : Std_logic_vector(6 - 1 downto 0);
+	signal vc_write_tx_pl_vec000   : Std_logic_vector(6 - 1 downto 0);
+	signal incr_tx_pl_vec000       : Std_logic_vector(6 - 1 downto 0);
+	signal data_in100, data_out100 : flit_vector(4 - 1 downto 0);
+	signal vc_write_rx_vec100      : Std_logic_vector(8 - 1 downto 0);
+	signal incr_rx_vec100          : Std_logic_vector(8 - 1 downto 0);
+	signal vc_write_tx_pl_vec100   : Std_logic_vector(8 - 1 downto 0);
+	signal incr_tx_pl_vec100       : Std_logic_vector(8 - 1 downto 0);
+	signal data_in200, data_out200 : flit_vector(4 - 1 downto 0);
+	signal vc_write_rx_vec200      : Std_logic_vector(8 - 1 downto 0);
+	signal incr_rx_vec200          : Std_logic_vector(8 - 1 downto 0);
+	signal vc_write_tx_pl_vec200   : Std_logic_vector(8 - 1 downto 0);
+	signal incr_tx_pl_vec200       : Std_logic_vector(8 - 1 downto 0);
+	signal data_in300, data_out300 : flit_vector(3 - 1 downto 0);
+	signal vc_write_rx_vec300      : Std_logic_vector(6 - 1 downto 0);
+	signal incr_rx_vec300          : Std_logic_vector(6 - 1 downto 0);
+	signal vc_write_tx_pl_vec300   : Std_logic_vector(6 - 1 downto 0);
+	signal incr_tx_pl_vec300       : Std_logic_vector(6 - 1 downto 0);
+	signal data_in010, data_out010 : flit_vector(4 - 1 downto 0);
+	signal vc_write_rx_vec010      : Std_logic_vector(8 - 1 downto 0);
+	signal incr_rx_vec010          : Std_logic_vector(8 - 1 downto 0);
+	signal vc_write_tx_pl_vec010   : Std_logic_vector(8 - 1 downto 0);
+	signal incr_tx_pl_vec010       : Std_logic_vector(8 - 1 downto 0);
+	signal data_in110, data_out110 : flit_vector(5 - 1 downto 0);
+	signal vc_write_rx_vec110      : Std_logic_vector(10 - 1 downto 0);
+	signal incr_rx_vec110          : Std_logic_vector(10 - 1 downto 0);
+	signal vc_write_tx_pl_vec110   : Std_logic_vector(10 - 1 downto 0);
+	signal incr_tx_pl_vec110       : Std_logic_vector(10 - 1 downto 0);
+	signal data_in210, data_out210 : flit_vector(5 - 1 downto 0);
+	signal vc_write_rx_vec210      : Std_logic_vector(10 - 1 downto 0);
+	signal incr_rx_vec210          : Std_logic_vector(10 - 1 downto 0);
+	signal vc_write_tx_pl_vec210   : Std_logic_vector(10 - 1 downto 0);
+	signal incr_tx_pl_vec210       : Std_logic_vector(10 - 1 downto 0);
+	signal data_in310, data_out310 : flit_vector(4 - 1 downto 0);
+	signal vc_write_rx_vec310      : Std_logic_vector(8 - 1 downto 0);
+	signal incr_rx_vec310          : Std_logic_vector(8 - 1 downto 0);
+	signal vc_write_tx_pl_vec310   : Std_logic_vector(8 - 1 downto 0);
+	signal incr_tx_pl_vec310       : Std_logic_vector(8 - 1 downto 0);
+	signal data_in020, data_out020 : flit_vector(4 - 1 downto 0);
+	signal vc_write_rx_vec020      : Std_logic_vector(8 - 1 downto 0);
+	signal incr_rx_vec020          : Std_logic_vector(8 - 1 downto 0);
+	signal vc_write_tx_pl_vec020   : Std_logic_vector(8 - 1 downto 0);
+	signal incr_tx_pl_vec020       : Std_logic_vector(8 - 1 downto 0);
+	signal data_in120, data_out120 : flit_vector(5 - 1 downto 0);
+	signal vc_write_rx_vec120      : Std_logic_vector(10 - 1 downto 0);
+	signal incr_rx_vec120          : Std_logic_vector(10 - 1 downto 0);
+	signal vc_write_tx_pl_vec120   : Std_logic_vector(10 - 1 downto 0);
+	signal incr_tx_pl_vec120       : Std_logic_vector(10 - 1 downto 0);
+	signal data_in220, data_out220 : flit_vector(5 - 1 downto 0);
+	signal vc_write_rx_vec220      : Std_logic_vector(10 - 1 downto 0);
+	signal incr_rx_vec220          : Std_logic_vector(10 - 1 downto 0);
+	signal vc_write_tx_pl_vec220   : Std_logic_vector(10 - 1 downto 0);
+	signal incr_tx_pl_vec220       : Std_logic_vector(10 - 1 downto 0);
+	signal data_in320, data_out320 : flit_vector(4 - 1 downto 0);
+	signal vc_write_rx_vec320      : Std_logic_vector(8 - 1 downto 0);
+	signal incr_rx_vec320          : Std_logic_vector(8 - 1 downto 0);
+	signal vc_write_tx_pl_vec320   : Std_logic_vector(8 - 1 downto 0);
+	signal incr_tx_pl_vec320       : Std_logic_vector(8 - 1 downto 0);
+	signal data_in030, data_out030 : flit_vector(3 - 1 downto 0);
+	signal vc_write_rx_vec030      : Std_logic_vector(6 - 1 downto 0);
+	signal incr_rx_vec030          : Std_logic_vector(6 - 1 downto 0);
+	signal vc_write_tx_pl_vec030   : Std_logic_vector(6 - 1 downto 0);
+	signal incr_tx_pl_vec030       : Std_logic_vector(6 - 1 downto 0);
+	signal data_in130, data_out130 : flit_vector(4 - 1 downto 0);
+	signal vc_write_rx_vec130      : Std_logic_vector(8 - 1 downto 0);
+	signal incr_rx_vec130          : Std_logic_vector(8 - 1 downto 0);
+	signal vc_write_tx_pl_vec130   : Std_logic_vector(8 - 1 downto 0);
+	signal incr_tx_pl_vec130       : Std_logic_vector(8 - 1 downto 0);
+	signal data_in230, data_out230 : flit_vector(4 - 1 downto 0);
+	signal vc_write_rx_vec230      : Std_logic_vector(8 - 1 downto 0);
+	signal incr_rx_vec230          : Std_logic_vector(8 - 1 downto 0);
+	signal vc_write_tx_pl_vec230   : Std_logic_vector(8 - 1 downto 0);
+	signal incr_tx_pl_vec230       : Std_logic_vector(8 - 1 downto 0);
+	signal data_in330, data_out330 : flit_vector(3 - 1 downto 0);
+	signal vc_write_rx_vec330      : Std_logic_vector(6 - 1 downto 0);
+	signal incr_rx_vec330          : Std_logic_vector(6 - 1 downto 0);
+	signal vc_write_tx_pl_vec330   : Std_logic_vector(6 - 1 downto 0);
+	signal incr_tx_pl_vec330       : Std_logic_vector(6 - 1 downto 0);
+
+begin
+	data_in000(0)                                  <= inter_data_in(0)(0)(0)(0);
+	inter_data_out(0)(0)(0)(0)                     <= data_out000(0);
+	incr_rx_vec000(2 - 1 downto 0)                 <= inter_incr_in(0)(0)(0)(0)(2 - 1 downto 0);
+	inter_incr_out(0)(0)(0)(0)(2 - 1 downto 0)     <= incr_tx_pl_vec000(2 - 1 downto 0);
+	vc_write_rx_vec000(2 - 1 downto 0)             <= inter_vc_write_in(0)(0)(0)(0)(2 - 1 downto 0);
+	inter_vc_write_out(0)(0)(0)(0)(2 - 1 downto 0) <= vc_write_tx_pl_vec000(2 - 1 downto 0);
+	data_in000(1)                                  <= inter_data_in(0)(0)(0)(1);
+	inter_data_out(0)(0)(0)(1)                     <= data_out000(1);
+	incr_rx_vec000(4 - 1 downto 2)                 <= inter_incr_in(0)(0)(0)(1)(2 - 1 downto 0);
+	inter_incr_out(0)(0)(0)(1)(2 - 1 downto 0)     <= incr_tx_pl_vec000(4 - 1 downto 2);
+	vc_write_rx_vec000(4 - 1 downto 2)             <= inter_vc_write_in(0)(0)(0)(1)(2 - 1 downto 0);
+	inter_vc_write_out(0)(0)(0)(1)(2 - 1 downto 0) <= vc_write_tx_pl_vec000(4 - 1 downto 2);
+
+	inter_data_in(0)(0)(0)(1) <= inter_data_out(0)(0 + 1)(0)(3);
+
+	inter_incr_in(0)(0)(0)(1) <= inter_incr_out(0)(0 + 1)(0)(3);
+
+	inter_vc_write_in(0)(0)(0)(1)                  <= inter_vc_write_out(0)(0 + 1)(0)(3);
+	data_in000(2)                                  <= inter_data_in(0)(0)(0)(2);
+	inter_data_out(0)(0)(0)(2)                     <= data_out000(2);
+	incr_rx_vec000(6 - 1 downto 4)                 <= inter_incr_in(0)(0)(0)(2)(2 - 1 downto 0);
+	inter_incr_out(0)(0)(0)(2)(2 - 1 downto 0)     <= incr_tx_pl_vec000(6 - 1 downto 4);
+	vc_write_rx_vec000(6 - 1 downto 4)             <= inter_vc_write_in(0)(0)(0)(2)(2 - 1 downto 0);
+	inter_vc_write_out(0)(0)(0)(2)(2 - 1 downto 0) <= vc_write_tx_pl_vec000(6 - 1 downto 4);
+
+	inter_data_in(0)(0)(0)(2) <= inter_data_out(0 + 1)(0)(0)(4);
+
+	inter_incr_in(0)(0)(0)(2) <= inter_incr_out(0 + 1)(0)(0)(4);
+
+	inter_vc_write_in(0)(0)(0)(2) <= inter_vc_write_out(0 + 1)(0)(0)(4);
+
+	inter_data_in(0)(0)(0)(0) <= local_rx(0);
+	local_tx(0)               <= inter_data_out(0)(0)(0)(0);
+
+	inter_incr_in(0)(0)(0)(0)(2 - 1 downto 0) <= local_incr_rx_vec(2 - 1 downto 0);
+	local_incr_tx_vec(2 - 1 downto 0)         <= inter_incr_out(0)(0)(0)(0)(2 - 1 downto 0);
+
+	inter_vc_write_in(0)(0)(0)(0)(2 - 1 downto 0) <= local_vc_write_rx(2 - 1 downto 0);
+	local_vc_write_tx(2 - 1 downto 0)             <= inter_vc_write_out(0)(0)(0)(0)(2 - 1 downto 0);
+
+	--------------------------------------------------------------------------
+	-- Router at x= 0 y=0 z=0
+	--------------------------------------------------------------------------
+	router_000 : entity work.router_pl
+		generic map(
+			port_num                     => 3,
+			Xis                          => 0,
+			Yis                          => 0,
+			Zis                          => 0,
+			header_incl_in_packet_length => true,
+			port_exist                   => (0, 1, 2),
+			vc_num_vec                   => (2, 2, 2),
+			vc_num_out_vec               => (2, 2, 2),
+			vc_depth_array               => ((2, 2), (2, 2), (2, 2)),
+			vc_depth_out_array           => ((2, 2), (2, 2), (2, 2)),
+			rout_algo                    => "XYZ"
+		)
+		port map(
+			clk                => clk,
+			rst                => rst,
+			data_rx            => data_in000,
+			vc_write_rx_vec    => vc_write_rx_vec000,
+			incr_rx_vec        => incr_rx_vec000,
+			data_tx_pl         => data_out000,
+			vc_write_tx_pl_vec => vc_write_tx_pl_vec000,
+			incr_tx_pl_vec     => incr_tx_pl_vec000
+		);
+	--------------------------------------------------------------------------
+	-- Router port connections to adjacent routers
+	--------------------------------------------------------------------------
+	data_in100(0)                                  <= inter_data_in(1)(0)(0)(0);
+	inter_data_out(1)(0)(0)(0)                     <= data_out100(0);
+	incr_rx_vec100(2 - 1 downto 0)                 <= inter_incr_in(1)(0)(0)(0)(2 - 1 downto 0);
+	inter_incr_out(1)(0)(0)(0)(2 - 1 downto 0)     <= incr_tx_pl_vec100(2 - 1 downto 0);
+	vc_write_rx_vec100(2 - 1 downto 0)             <= inter_vc_write_in(1)(0)(0)(0)(2 - 1 downto 0);
+	inter_vc_write_out(1)(0)(0)(0)(2 - 1 downto 0) <= vc_write_tx_pl_vec100(2 - 1 downto 0);
+	data_in100(1)                                  <= inter_data_in(1)(0)(0)(1);
+	inter_data_out(1)(0)(0)(1)                     <= data_out100(1);
+	incr_rx_vec100(4 - 1 downto 2)                 <= inter_incr_in(1)(0)(0)(1)(2 - 1 downto 0);
+	inter_incr_out(1)(0)(0)(1)(2 - 1 downto 0)     <= incr_tx_pl_vec100(4 - 1 downto 2);
+	vc_write_rx_vec100(4 - 1 downto 2)             <= inter_vc_write_in(1)(0)(0)(1)(2 - 1 downto 0);
+	inter_vc_write_out(1)(0)(0)(1)(2 - 1 downto 0) <= vc_write_tx_pl_vec100(4 - 1 downto 2);
+
+	inter_data_in(1)(0)(0)(1) <= inter_data_out(1)(0 + 1)(0)(3);
+
+	inter_incr_in(1)(0)(0)(1) <= inter_incr_out(1)(0 + 1)(0)(3);
+
+	inter_vc_write_in(1)(0)(0)(1)                  <= inter_vc_write_out(1)(0 + 1)(0)(3);
+	data_in100(2)                                  <= inter_data_in(1)(0)(0)(2);
+	inter_data_out(1)(0)(0)(2)                     <= data_out100(2);
+	incr_rx_vec100(6 - 1 downto 4)                 <= inter_incr_in(1)(0)(0)(2)(2 - 1 downto 0);
+	inter_incr_out(1)(0)(0)(2)(2 - 1 downto 0)     <= incr_tx_pl_vec100(6 - 1 downto 4);
+	vc_write_rx_vec100(6 - 1 downto 4)             <= inter_vc_write_in(1)(0)(0)(2)(2 - 1 downto 0);
+	inter_vc_write_out(1)(0)(0)(2)(2 - 1 downto 0) <= vc_write_tx_pl_vec100(6 - 1 downto 4);
+
+	inter_data_in(1)(0)(0)(2) <= inter_data_out(1 + 1)(0)(0)(4);
+
+	inter_incr_in(1)(0)(0)(2) <= inter_incr_out(1 + 1)(0)(0)(4);
+
+	inter_vc_write_in(1)(0)(0)(2)                  <= inter_vc_write_out(1 + 1)(0)(0)(4);
+	data_in100(3)                                  <= inter_data_in(1)(0)(0)(4);
+	inter_data_out(1)(0)(0)(4)                     <= data_out100(3);
+	incr_rx_vec100(8 - 1 downto 6)                 <= inter_incr_in(1)(0)(0)(4)(2 - 1 downto 0);
+	inter_incr_out(1)(0)(0)(4)(2 - 1 downto 0)     <= incr_tx_pl_vec100(8 - 1 downto 6);
+	vc_write_rx_vec100(8 - 1 downto 6)             <= inter_vc_write_in(1)(0)(0)(4)(2 - 1 downto 0);
+	inter_vc_write_out(1)(0)(0)(4)(2 - 1 downto 0) <= vc_write_tx_pl_vec100(8 - 1 downto 6);
+
+	inter_data_in(1)(0)(0)(4) <= inter_data_out(1 - 1)(0)(0)(2);
+
+	inter_incr_in(1)(0)(0)(4) <= inter_incr_out(1 - 1)(0)(0)(2);
+
+	inter_vc_write_in(1)(0)(0)(4) <= inter_vc_write_out(1 - 1)(0)(0)(2);
+
+	inter_data_in(1)(0)(0)(0) <= local_rx(1);
+	local_tx(1)               <= inter_data_out(1)(0)(0)(0);
+
+	inter_incr_in(1)(0)(0)(0)(2 - 1 downto 0) <= local_incr_rx_vec(4 - 1 downto 2);
+	local_incr_tx_vec(4 - 1 downto 2)         <= inter_incr_out(1)(0)(0)(0)(2 - 1 downto 0);
+
+	inter_vc_write_in(1)(0)(0)(0)(2 - 1 downto 0) <= local_vc_write_rx(4 - 1 downto 2);
+	local_vc_write_tx(4 - 1 downto 2)             <= inter_vc_write_out(1)(0)(0)(0)(2 - 1 downto 0);
+
+	--------------------------------------------------------------------------
+	-- Router at x= 1 y=0 z=0
+	--------------------------------------------------------------------------
+	router_100 : entity work.router_pl
+		generic map(
+			port_num                     => 4,
+			Xis                          => 1,
+			Yis                          => 0,
+			Zis                          => 0,
+			header_incl_in_packet_length => true,
+			port_exist                   => (0, 1, 2, 4),
+			vc_num_vec                   => (2, 2, 2, 2),
+			vc_num_out_vec               => (2, 2, 2, 2),
+			vc_depth_array               => ((2, 2), (2, 2), (2, 2), (2, 2)),
+			vc_depth_out_array           => ((2, 2), (2, 2), (2, 2), (2, 2)),
+			rout_algo                    => "XYZ"
+		)
+		port map(
+			clk                => clk,
+			rst                => rst,
+			data_rx            => data_in100,
+			vc_write_rx_vec    => vc_write_rx_vec100,
+			incr_rx_vec        => incr_rx_vec100,
+			data_tx_pl         => data_out100,
+			vc_write_tx_pl_vec => vc_write_tx_pl_vec100,
+			incr_tx_pl_vec     => incr_tx_pl_vec100
+		);
+	--------------------------------------------------------------------------
+	-- Router port connections to adjacent routers
+	--------------------------------------------------------------------------
+	data_in200(0)                                  <= inter_data_in(2)(0)(0)(0);
+	inter_data_out(2)(0)(0)(0)                     <= data_out200(0);
+	incr_rx_vec200(2 - 1 downto 0)                 <= inter_incr_in(2)(0)(0)(0)(2 - 1 downto 0);
+	inter_incr_out(2)(0)(0)(0)(2 - 1 downto 0)     <= incr_tx_pl_vec200(2 - 1 downto 0);
+	vc_write_rx_vec200(2 - 1 downto 0)             <= inter_vc_write_in(2)(0)(0)(0)(2 - 1 downto 0);
+	inter_vc_write_out(2)(0)(0)(0)(2 - 1 downto 0) <= vc_write_tx_pl_vec200(2 - 1 downto 0);
+	data_in200(1)                                  <= inter_data_in(2)(0)(0)(1);
+	inter_data_out(2)(0)(0)(1)                     <= data_out200(1);
+	incr_rx_vec200(4 - 1 downto 2)                 <= inter_incr_in(2)(0)(0)(1)(2 - 1 downto 0);
+	inter_incr_out(2)(0)(0)(1)(2 - 1 downto 0)     <= incr_tx_pl_vec200(4 - 1 downto 2);
+	vc_write_rx_vec200(4 - 1 downto 2)             <= inter_vc_write_in(2)(0)(0)(1)(2 - 1 downto 0);
+	inter_vc_write_out(2)(0)(0)(1)(2 - 1 downto 0) <= vc_write_tx_pl_vec200(4 - 1 downto 2);
+
+	inter_data_in(2)(0)(0)(1) <= inter_data_out(2)(0 + 1)(0)(3);
+
+	inter_incr_in(2)(0)(0)(1) <= inter_incr_out(2)(0 + 1)(0)(3);
+
+	inter_vc_write_in(2)(0)(0)(1)                  <= inter_vc_write_out(2)(0 + 1)(0)(3);
+	data_in200(2)                                  <= inter_data_in(2)(0)(0)(2);
+	inter_data_out(2)(0)(0)(2)                     <= data_out200(2);
+	incr_rx_vec200(6 - 1 downto 4)                 <= inter_incr_in(2)(0)(0)(2)(2 - 1 downto 0);
+	inter_incr_out(2)(0)(0)(2)(2 - 1 downto 0)     <= incr_tx_pl_vec200(6 - 1 downto 4);
+	vc_write_rx_vec200(6 - 1 downto 4)             <= inter_vc_write_in(2)(0)(0)(2)(2 - 1 downto 0);
+	inter_vc_write_out(2)(0)(0)(2)(2 - 1 downto 0) <= vc_write_tx_pl_vec200(6 - 1 downto 4);
+
+	inter_data_in(2)(0)(0)(2) <= inter_data_out(2 + 1)(0)(0)(4);
+
+	inter_incr_in(2)(0)(0)(2) <= inter_incr_out(2 + 1)(0)(0)(4);
+
+	inter_vc_write_in(2)(0)(0)(2)                  <= inter_vc_write_out(2 + 1)(0)(0)(4);
+	data_in200(3)                                  <= inter_data_in(2)(0)(0)(4);
+	inter_data_out(2)(0)(0)(4)                     <= data_out200(3);
+	incr_rx_vec200(8 - 1 downto 6)                 <= inter_incr_in(2)(0)(0)(4)(2 - 1 downto 0);
+	inter_incr_out(2)(0)(0)(4)(2 - 1 downto 0)     <= incr_tx_pl_vec200(8 - 1 downto 6);
+	vc_write_rx_vec200(8 - 1 downto 6)             <= inter_vc_write_in(2)(0)(0)(4)(2 - 1 downto 0);
+	inter_vc_write_out(2)(0)(0)(4)(2 - 1 downto 0) <= vc_write_tx_pl_vec200(8 - 1 downto 6);
+
+	inter_data_in(2)(0)(0)(4) <= inter_data_out(2 - 1)(0)(0)(2);
+
+	inter_incr_in(2)(0)(0)(4) <= inter_incr_out(2 - 1)(0)(0)(2);
+
+	inter_vc_write_in(2)(0)(0)(4) <= inter_vc_write_out(2 - 1)(0)(0)(2);
+
+	inter_data_in(2)(0)(0)(0) <= local_rx(2);
+	local_tx(2)               <= inter_data_out(2)(0)(0)(0);
+
+	inter_incr_in(2)(0)(0)(0)(2 - 1 downto 0) <= local_incr_rx_vec(6 - 1 downto 4);
+	local_incr_tx_vec(6 - 1 downto 4)         <= inter_incr_out(2)(0)(0)(0)(2 - 1 downto 0);
+
+	inter_vc_write_in(2)(0)(0)(0)(2 - 1 downto 0) <= local_vc_write_rx(6 - 1 downto 4);
+	local_vc_write_tx(6 - 1 downto 4)             <= inter_vc_write_out(2)(0)(0)(0)(2 - 1 downto 0);
+
+	--------------------------------------------------------------------------
+	-- Router at x= 2 y=0 z=0
+	--------------------------------------------------------------------------
+	router_200 : entity work.router_pl
+		generic map(
+			port_num                     => 4,
+			Xis                          => 2,
+			Yis                          => 0,
+			Zis                          => 0,
+			header_incl_in_packet_length => true,
+			port_exist                   => (0, 1, 2, 4),
+			vc_num_vec                   => (2, 2, 2, 2),
+			vc_num_out_vec               => (2, 2, 2, 2),
+			vc_depth_array               => ((2, 2), (2, 2), (2, 2), (2, 2)),
+			vc_depth_out_array           => ((2, 2), (2, 2), (2, 2), (2, 2)),
+			rout_algo                    => "XYZ"
+		)
+		port map(
+			clk                => clk,
+			rst                => rst,
+			data_rx            => data_in200,
+			vc_write_rx_vec    => vc_write_rx_vec200,
+			incr_rx_vec        => incr_rx_vec200,
+			data_tx_pl         => data_out200,
+			vc_write_tx_pl_vec => vc_write_tx_pl_vec200,
+			incr_tx_pl_vec     => incr_tx_pl_vec200
+		);
+	--------------------------------------------------------------------------
+	-- Router port connections to adjacent routers
+	--------------------------------------------------------------------------
+	data_in300(0)                                  <= inter_data_in(3)(0)(0)(0);
+	inter_data_out(3)(0)(0)(0)                     <= data_out300(0);
+	incr_rx_vec300(2 - 1 downto 0)                 <= inter_incr_in(3)(0)(0)(0)(2 - 1 downto 0);
+	inter_incr_out(3)(0)(0)(0)(2 - 1 downto 0)     <= incr_tx_pl_vec300(2 - 1 downto 0);
+	vc_write_rx_vec300(2 - 1 downto 0)             <= inter_vc_write_in(3)(0)(0)(0)(2 - 1 downto 0);
+	inter_vc_write_out(3)(0)(0)(0)(2 - 1 downto 0) <= vc_write_tx_pl_vec300(2 - 1 downto 0);
+	data_in300(1)                                  <= inter_data_in(3)(0)(0)(1);
+	inter_data_out(3)(0)(0)(1)                     <= data_out300(1);
+	incr_rx_vec300(4 - 1 downto 2)                 <= inter_incr_in(3)(0)(0)(1)(2 - 1 downto 0);
+	inter_incr_out(3)(0)(0)(1)(2 - 1 downto 0)     <= incr_tx_pl_vec300(4 - 1 downto 2);
+	vc_write_rx_vec300(4 - 1 downto 2)             <= inter_vc_write_in(3)(0)(0)(1)(2 - 1 downto 0);
+	inter_vc_write_out(3)(0)(0)(1)(2 - 1 downto 0) <= vc_write_tx_pl_vec300(4 - 1 downto 2);
+
+	inter_data_in(3)(0)(0)(1) <= inter_data_out(3)(0 + 1)(0)(3);
+
+	inter_incr_in(3)(0)(0)(1) <= inter_incr_out(3)(0 + 1)(0)(3);
+
+	inter_vc_write_in(3)(0)(0)(1)                  <= inter_vc_write_out(3)(0 + 1)(0)(3);
+	data_in300(2)                                  <= inter_data_in(3)(0)(0)(4);
+	inter_data_out(3)(0)(0)(4)                     <= data_out300(2);
+	incr_rx_vec300(6 - 1 downto 4)                 <= inter_incr_in(3)(0)(0)(4)(2 - 1 downto 0);
+	inter_incr_out(3)(0)(0)(4)(2 - 1 downto 0)     <= incr_tx_pl_vec300(6 - 1 downto 4);
+	vc_write_rx_vec300(6 - 1 downto 4)             <= inter_vc_write_in(3)(0)(0)(4)(2 - 1 downto 0);
+	inter_vc_write_out(3)(0)(0)(4)(2 - 1 downto 0) <= vc_write_tx_pl_vec300(6 - 1 downto 4);
+
+	inter_data_in(3)(0)(0)(4) <= inter_data_out(3 - 1)(0)(0)(2);
+
+	inter_incr_in(3)(0)(0)(4) <= inter_incr_out(3 - 1)(0)(0)(2);
+
+	inter_vc_write_in(3)(0)(0)(4) <= inter_vc_write_out(3 - 1)(0)(0)(2);
+
+	inter_data_in(3)(0)(0)(0) <= local_rx(3);
+	local_tx(3)               <= inter_data_out(3)(0)(0)(0);
+
+	inter_incr_in(3)(0)(0)(0)(2 - 1 downto 0) <= local_incr_rx_vec(8 - 1 downto 6);
+	local_incr_tx_vec(8 - 1 downto 6)         <= inter_incr_out(3)(0)(0)(0)(2 - 1 downto 0);
+
+	inter_vc_write_in(3)(0)(0)(0)(2 - 1 downto 0) <= local_vc_write_rx(8 - 1 downto 6);
+	local_vc_write_tx(8 - 1 downto 6)             <= inter_vc_write_out(3)(0)(0)(0)(2 - 1 downto 0);
+
+	--------------------------------------------------------------------------
+	-- Router at x= 3 y=0 z=0
+	--------------------------------------------------------------------------
+	router_300 : entity work.router_pl
+		generic map(
+			port_num                     => 3,
+			Xis                          => 3,
+			Yis                          => 0,
+			Zis                          => 0,
+			header_incl_in_packet_length => true,
+			port_exist                   => (0, 1, 4),
+			vc_num_vec                   => (2, 2, 2),
+			vc_num_out_vec               => (2, 2, 2),
+			vc_depth_array               => ((2, 2), (2, 2), (2, 2)),
+			vc_depth_out_array           => ((2, 2), (2, 2), (2, 2)),
+			rout_algo                    => "XYZ"
+		)
+		port map(
+			clk                => clk,
+			rst                => rst,
+			data_rx            => data_in300,
+			vc_write_rx_vec    => vc_write_rx_vec300,
+			incr_rx_vec        => incr_rx_vec300,
+			data_tx_pl         => data_out300,
+			vc_write_tx_pl_vec => vc_write_tx_pl_vec300,
+			incr_tx_pl_vec     => incr_tx_pl_vec300
+		);
+	--------------------------------------------------------------------------
+	-- Router port connections to adjacent routers
+	--------------------------------------------------------------------------
+	data_in010(0)                                  <= inter_data_in(0)(1)(0)(0);
+	inter_data_out(0)(1)(0)(0)                     <= data_out010(0);
+	incr_rx_vec010(2 - 1 downto 0)                 <= inter_incr_in(0)(1)(0)(0)(2 - 1 downto 0);
+	inter_incr_out(0)(1)(0)(0)(2 - 1 downto 0)     <= incr_tx_pl_vec010(2 - 1 downto 0);
+	vc_write_rx_vec010(2 - 1 downto 0)             <= inter_vc_write_in(0)(1)(0)(0)(2 - 1 downto 0);
+	inter_vc_write_out(0)(1)(0)(0)(2 - 1 downto 0) <= vc_write_tx_pl_vec010(2 - 1 downto 0);
+	data_in010(1)                                  <= inter_data_in(0)(1)(0)(1);
+	inter_data_out(0)(1)(0)(1)                     <= data_out010(1);
+	incr_rx_vec010(4 - 1 downto 2)                 <= inter_incr_in(0)(1)(0)(1)(2 - 1 downto 0);
+	inter_incr_out(0)(1)(0)(1)(2 - 1 downto 0)     <= incr_tx_pl_vec010(4 - 1 downto 2);
+	vc_write_rx_vec010(4 - 1 downto 2)             <= inter_vc_write_in(0)(1)(0)(1)(2 - 1 downto 0);
+	inter_vc_write_out(0)(1)(0)(1)(2 - 1 downto 0) <= vc_write_tx_pl_vec010(4 - 1 downto 2);
+
+	inter_data_in(0)(1)(0)(1) <= inter_data_out(0)(1 + 1)(0)(3);
+
+	inter_incr_in(0)(1)(0)(1) <= inter_incr_out(0)(1 + 1)(0)(3);
+
+	inter_vc_write_in(0)(1)(0)(1)                  <= inter_vc_write_out(0)(1 + 1)(0)(3);
+	data_in010(2)                                  <= inter_data_in(0)(1)(0)(2);
+	inter_data_out(0)(1)(0)(2)                     <= data_out010(2);
+	incr_rx_vec010(6 - 1 downto 4)                 <= inter_incr_in(0)(1)(0)(2)(2 - 1 downto 0);
+	inter_incr_out(0)(1)(0)(2)(2 - 1 downto 0)     <= incr_tx_pl_vec010(6 - 1 downto 4);
+	vc_write_rx_vec010(6 - 1 downto 4)             <= inter_vc_write_in(0)(1)(0)(2)(2 - 1 downto 0);
+	inter_vc_write_out(0)(1)(0)(2)(2 - 1 downto 0) <= vc_write_tx_pl_vec010(6 - 1 downto 4);
+
+	inter_data_in(0)(1)(0)(2) <= inter_data_out(0 + 1)(1)(0)(4);
+
+	inter_incr_in(0)(1)(0)(2) <= inter_incr_out(0 + 1)(1)(0)(4);
+
+	inter_vc_write_in(0)(1)(0)(2)                  <= inter_vc_write_out(0 + 1)(1)(0)(4);
+	data_in010(3)                                  <= inter_data_in(0)(1)(0)(3);
+	inter_data_out(0)(1)(0)(3)                     <= data_out010(3);
+	incr_rx_vec010(8 - 1 downto 6)                 <= inter_incr_in(0)(1)(0)(3)(2 - 1 downto 0);
+	inter_incr_out(0)(1)(0)(3)(2 - 1 downto 0)     <= incr_tx_pl_vec010(8 - 1 downto 6);
+	vc_write_rx_vec010(8 - 1 downto 6)             <= inter_vc_write_in(0)(1)(0)(3)(2 - 1 downto 0);
+	inter_vc_write_out(0)(1)(0)(3)(2 - 1 downto 0) <= vc_write_tx_pl_vec010(8 - 1 downto 6);
+
+	inter_data_in(0)(1)(0)(3) <= inter_data_out(0)(1 - 1)(0)(1);
+
+	inter_incr_in(0)(1)(0)(3) <= inter_incr_out(0)(1 - 1)(0)(1);
+
+	inter_vc_write_in(0)(1)(0)(3) <= inter_vc_write_out(0)(1 - 1)(0)(1);
+
+	inter_data_in(0)(1)(0)(0) <= local_rx(4);
+	local_tx(4)               <= inter_data_out(0)(1)(0)(0);
+
+	inter_incr_in(0)(1)(0)(0)(2 - 1 downto 0) <= local_incr_rx_vec(10 - 1 downto 8);
+	local_incr_tx_vec(10 - 1 downto 8)        <= inter_incr_out(0)(1)(0)(0)(2 - 1 downto 0);
+
+	inter_vc_write_in(0)(1)(0)(0)(2 - 1 downto 0) <= local_vc_write_rx(10 - 1 downto 8);
+	local_vc_write_tx(10 - 1 downto 8)            <= inter_vc_write_out(0)(1)(0)(0)(2 - 1 downto 0);
+
+	--------------------------------------------------------------------------
+	-- Router at x= 0 y=1 z=0
+	--------------------------------------------------------------------------
+	router_010 : entity work.router_pl
+		generic map(
+			port_num                     => 4,
+			Xis                          => 0,
+			Yis                          => 1,
+			Zis                          => 0,
+			header_incl_in_packet_length => true,
+			port_exist                   => (0, 1, 2, 3),
+			vc_num_vec                   => (2, 2, 2, 2),
+			vc_num_out_vec               => (2, 2, 2, 2),
+			vc_depth_array               => ((2, 2), (2, 2), (2, 2), (2, 2)),
+			vc_depth_out_array           => ((2, 2), (2, 2), (2, 2), (2, 2)),
+			rout_algo                    => "XYZ"
+		)
+		port map(
+			clk                => clk,
+			rst                => rst,
+			data_rx            => data_in010,
+			vc_write_rx_vec    => vc_write_rx_vec010,
+			incr_rx_vec        => incr_rx_vec010,
+			data_tx_pl         => data_out010,
+			vc_write_tx_pl_vec => vc_write_tx_pl_vec010,
+			incr_tx_pl_vec     => incr_tx_pl_vec010
+		);
+	--------------------------------------------------------------------------
+	-- Router port connections to adjacent routers
+	--------------------------------------------------------------------------
+	data_in110(0)                                  <= inter_data_in(1)(1)(0)(0);
+	inter_data_out(1)(1)(0)(0)                     <= data_out110(0);
+	incr_rx_vec110(2 - 1 downto 0)                 <= inter_incr_in(1)(1)(0)(0)(2 - 1 downto 0);
+	inter_incr_out(1)(1)(0)(0)(2 - 1 downto 0)     <= incr_tx_pl_vec110(2 - 1 downto 0);
+	vc_write_rx_vec110(2 - 1 downto 0)             <= inter_vc_write_in(1)(1)(0)(0)(2 - 1 downto 0);
+	inter_vc_write_out(1)(1)(0)(0)(2 - 1 downto 0) <= vc_write_tx_pl_vec110(2 - 1 downto 0);
+	data_in110(1)                                  <= inter_data_in(1)(1)(0)(1);
+	inter_data_out(1)(1)(0)(1)                     <= data_out110(1);
+	incr_rx_vec110(4 - 1 downto 2)                 <= inter_incr_in(1)(1)(0)(1)(2 - 1 downto 0);
+	inter_incr_out(1)(1)(0)(1)(2 - 1 downto 0)     <= incr_tx_pl_vec110(4 - 1 downto 2);
+	vc_write_rx_vec110(4 - 1 downto 2)             <= inter_vc_write_in(1)(1)(0)(1)(2 - 1 downto 0);
+	inter_vc_write_out(1)(1)(0)(1)(2 - 1 downto 0) <= vc_write_tx_pl_vec110(4 - 1 downto 2);
+
+	inter_data_in(1)(1)(0)(1) <= inter_data_out(1)(1 + 1)(0)(3);
+
+	inter_incr_in(1)(1)(0)(1) <= inter_incr_out(1)(1 + 1)(0)(3);
+
+	inter_vc_write_in(1)(1)(0)(1)                  <= inter_vc_write_out(1)(1 + 1)(0)(3);
+	data_in110(2)                                  <= inter_data_in(1)(1)(0)(2);
+	inter_data_out(1)(1)(0)(2)                     <= data_out110(2);
+	incr_rx_vec110(6 - 1 downto 4)                 <= inter_incr_in(1)(1)(0)(2)(2 - 1 downto 0);
+	inter_incr_out(1)(1)(0)(2)(2 - 1 downto 0)     <= incr_tx_pl_vec110(6 - 1 downto 4);
+	vc_write_rx_vec110(6 - 1 downto 4)             <= inter_vc_write_in(1)(1)(0)(2)(2 - 1 downto 0);
+	inter_vc_write_out(1)(1)(0)(2)(2 - 1 downto 0) <= vc_write_tx_pl_vec110(6 - 1 downto 4);
+
+	inter_data_in(1)(1)(0)(2) <= inter_data_out(1 + 1)(1)(0)(4);
+
+	inter_incr_in(1)(1)(0)(2) <= inter_incr_out(1 + 1)(1)(0)(4);
+
+	inter_vc_write_in(1)(1)(0)(2)                  <= inter_vc_write_out(1 + 1)(1)(0)(4);
+	data_in110(3)                                  <= inter_data_in(1)(1)(0)(3);
+	inter_data_out(1)(1)(0)(3)                     <= data_out110(3);
+	incr_rx_vec110(8 - 1 downto 6)                 <= inter_incr_in(1)(1)(0)(3)(2 - 1 downto 0);
+	inter_incr_out(1)(1)(0)(3)(2 - 1 downto 0)     <= incr_tx_pl_vec110(8 - 1 downto 6);
+	vc_write_rx_vec110(8 - 1 downto 6)             <= inter_vc_write_in(1)(1)(0)(3)(2 - 1 downto 0);
+	inter_vc_write_out(1)(1)(0)(3)(2 - 1 downto 0) <= vc_write_tx_pl_vec110(8 - 1 downto 6);
+
+	inter_data_in(1)(1)(0)(3) <= inter_data_out(1)(1 - 1)(0)(1);
+
+	inter_incr_in(1)(1)(0)(3) <= inter_incr_out(1)(1 - 1)(0)(1);
+
+	inter_vc_write_in(1)(1)(0)(3)                  <= inter_vc_write_out(1)(1 - 1)(0)(1);
+	data_in110(4)                                  <= inter_data_in(1)(1)(0)(4);
+	inter_data_out(1)(1)(0)(4)                     <= data_out110(4);
+	incr_rx_vec110(10 - 1 downto 8)                <= inter_incr_in(1)(1)(0)(4)(2 - 1 downto 0);
+	inter_incr_out(1)(1)(0)(4)(2 - 1 downto 0)     <= incr_tx_pl_vec110(10 - 1 downto 8);
+	vc_write_rx_vec110(10 - 1 downto 8)            <= inter_vc_write_in(1)(1)(0)(4)(2 - 1 downto 0);
+	inter_vc_write_out(1)(1)(0)(4)(2 - 1 downto 0) <= vc_write_tx_pl_vec110(10 - 1 downto 8);
+
+	inter_data_in(1)(1)(0)(4) <= inter_data_out(1 - 1)(1)(0)(2);
+
+	inter_incr_in(1)(1)(0)(4) <= inter_incr_out(1 - 1)(1)(0)(2);
+
+	inter_vc_write_in(1)(1)(0)(4) <= inter_vc_write_out(1 - 1)(1)(0)(2);
+
+	inter_data_in(1)(1)(0)(0) <= local_rx(5);
+	local_tx(5)               <= inter_data_out(1)(1)(0)(0);
+
+	inter_incr_in(1)(1)(0)(0)(2 - 1 downto 0) <= local_incr_rx_vec(12 - 1 downto 10);
+	local_incr_tx_vec(12 - 1 downto 10)       <= inter_incr_out(1)(1)(0)(0)(2 - 1 downto 0);
+
+	inter_vc_write_in(1)(1)(0)(0)(2 - 1 downto 0) <= local_vc_write_rx(12 - 1 downto 10);
+	local_vc_write_tx(12 - 1 downto 10)           <= inter_vc_write_out(1)(1)(0)(0)(2 - 1 downto 0);
+
+	--------------------------------------------------------------------------
+	-- Router at x= 1 y=1 z=0
+	--------------------------------------------------------------------------
+	router_110 : entity work.router_pl
+		generic map(
+			port_num                     => 5,
+			Xis                          => 1,
+			Yis                          => 1,
+			Zis                          => 0,
+			header_incl_in_packet_length => true,
+			port_exist                   => (0, 1, 2, 3, 4),
+			vc_num_vec                   => (2, 2, 2, 2, 2),
+			vc_num_out_vec               => (2, 2, 2, 2, 2),
+			vc_depth_array               => ((2, 2), (2, 2), (2, 2), (2, 2), (2, 2)),
+			vc_depth_out_array           => ((2, 2), (2, 2), (2, 2), (2, 2), (2, 2)),
+			rout_algo                    => "XYZ"
+		)
+		port map(
+			clk                => clk,
+			rst                => rst,
+			data_rx            => data_in110,
+			vc_write_rx_vec    => vc_write_rx_vec110,
+			incr_rx_vec        => incr_rx_vec110,
+			data_tx_pl         => data_out110,
+			vc_write_tx_pl_vec => vc_write_tx_pl_vec110,
+			incr_tx_pl_vec     => incr_tx_pl_vec110
+		);
+	--------------------------------------------------------------------------
+	-- Router port connections to adjacent routers
+	--------------------------------------------------------------------------
+	data_in210(0)                                  <= inter_data_in(2)(1)(0)(0);
+	inter_data_out(2)(1)(0)(0)                     <= data_out210(0);
+	incr_rx_vec210(2 - 1 downto 0)                 <= inter_incr_in(2)(1)(0)(0)(2 - 1 downto 0);
+	inter_incr_out(2)(1)(0)(0)(2 - 1 downto 0)     <= incr_tx_pl_vec210(2 - 1 downto 0);
+	vc_write_rx_vec210(2 - 1 downto 0)             <= inter_vc_write_in(2)(1)(0)(0)(2 - 1 downto 0);
+	inter_vc_write_out(2)(1)(0)(0)(2 - 1 downto 0) <= vc_write_tx_pl_vec210(2 - 1 downto 0);
+	data_in210(1)                                  <= inter_data_in(2)(1)(0)(1);
+	inter_data_out(2)(1)(0)(1)                     <= data_out210(1);
+	incr_rx_vec210(4 - 1 downto 2)                 <= inter_incr_in(2)(1)(0)(1)(2 - 1 downto 0);
+	inter_incr_out(2)(1)(0)(1)(2 - 1 downto 0)     <= incr_tx_pl_vec210(4 - 1 downto 2);
+	vc_write_rx_vec210(4 - 1 downto 2)             <= inter_vc_write_in(2)(1)(0)(1)(2 - 1 downto 0);
+	inter_vc_write_out(2)(1)(0)(1)(2 - 1 downto 0) <= vc_write_tx_pl_vec210(4 - 1 downto 2);
+
+	inter_data_in(2)(1)(0)(1) <= inter_data_out(2)(1 + 1)(0)(3);
+
+	inter_incr_in(2)(1)(0)(1) <= inter_incr_out(2)(1 + 1)(0)(3);
+
+	inter_vc_write_in(2)(1)(0)(1)                  <= inter_vc_write_out(2)(1 + 1)(0)(3);
+	data_in210(2)                                  <= inter_data_in(2)(1)(0)(2);
+	inter_data_out(2)(1)(0)(2)                     <= data_out210(2);
+	incr_rx_vec210(6 - 1 downto 4)                 <= inter_incr_in(2)(1)(0)(2)(2 - 1 downto 0);
+	inter_incr_out(2)(1)(0)(2)(2 - 1 downto 0)     <= incr_tx_pl_vec210(6 - 1 downto 4);
+	vc_write_rx_vec210(6 - 1 downto 4)             <= inter_vc_write_in(2)(1)(0)(2)(2 - 1 downto 0);
+	inter_vc_write_out(2)(1)(0)(2)(2 - 1 downto 0) <= vc_write_tx_pl_vec210(6 - 1 downto 4);
+
+	inter_data_in(2)(1)(0)(2) <= inter_data_out(2 + 1)(1)(0)(4);
+
+	inter_incr_in(2)(1)(0)(2) <= inter_incr_out(2 + 1)(1)(0)(4);
+
+	inter_vc_write_in(2)(1)(0)(2)                  <= inter_vc_write_out(2 + 1)(1)(0)(4);
+	data_in210(3)                                  <= inter_data_in(2)(1)(0)(3);
+	inter_data_out(2)(1)(0)(3)                     <= data_out210(3);
+	incr_rx_vec210(8 - 1 downto 6)                 <= inter_incr_in(2)(1)(0)(3)(2 - 1 downto 0);
+	inter_incr_out(2)(1)(0)(3)(2 - 1 downto 0)     <= incr_tx_pl_vec210(8 - 1 downto 6);
+	vc_write_rx_vec210(8 - 1 downto 6)             <= inter_vc_write_in(2)(1)(0)(3)(2 - 1 downto 0);
+	inter_vc_write_out(2)(1)(0)(3)(2 - 1 downto 0) <= vc_write_tx_pl_vec210(8 - 1 downto 6);
+
+	inter_data_in(2)(1)(0)(3) <= inter_data_out(2)(1 - 1)(0)(1);
+
+	inter_incr_in(2)(1)(0)(3) <= inter_incr_out(2)(1 - 1)(0)(1);
+
+	inter_vc_write_in(2)(1)(0)(3)                  <= inter_vc_write_out(2)(1 - 1)(0)(1);
+	data_in210(4)                                  <= inter_data_in(2)(1)(0)(4);
+	inter_data_out(2)(1)(0)(4)                     <= data_out210(4);
+	incr_rx_vec210(10 - 1 downto 8)                <= inter_incr_in(2)(1)(0)(4)(2 - 1 downto 0);
+	inter_incr_out(2)(1)(0)(4)(2 - 1 downto 0)     <= incr_tx_pl_vec210(10 - 1 downto 8);
+	vc_write_rx_vec210(10 - 1 downto 8)            <= inter_vc_write_in(2)(1)(0)(4)(2 - 1 downto 0);
+	inter_vc_write_out(2)(1)(0)(4)(2 - 1 downto 0) <= vc_write_tx_pl_vec210(10 - 1 downto 8);
+
+	inter_data_in(2)(1)(0)(4) <= inter_data_out(2 - 1)(1)(0)(2);
+
+	inter_incr_in(2)(1)(0)(4) <= inter_incr_out(2 - 1)(1)(0)(2);
+
+	inter_vc_write_in(2)(1)(0)(4) <= inter_vc_write_out(2 - 1)(1)(0)(2);
+
+	inter_data_in(2)(1)(0)(0) <= local_rx(6);
+	local_tx(6)               <= inter_data_out(2)(1)(0)(0);
+
+	inter_incr_in(2)(1)(0)(0)(2 - 1 downto 0) <= local_incr_rx_vec(14 - 1 downto 12);
+	local_incr_tx_vec(14 - 1 downto 12)       <= inter_incr_out(2)(1)(0)(0)(2 - 1 downto 0);
+
+	inter_vc_write_in(2)(1)(0)(0)(2 - 1 downto 0) <= local_vc_write_rx(14 - 1 downto 12);
+	local_vc_write_tx(14 - 1 downto 12)           <= inter_vc_write_out(2)(1)(0)(0)(2 - 1 downto 0);
+
+	--------------------------------------------------------------------------
+	-- Router at x= 2 y=1 z=0
+	--------------------------------------------------------------------------
+	router_210 : entity work.router_pl
+		generic map(
+			port_num                     => 5,
+			Xis                          => 2,
+			Yis                          => 1,
+			Zis                          => 0,
+			header_incl_in_packet_length => true,
+			port_exist                   => (0, 1, 2, 3, 4),
+			vc_num_vec                   => (2, 2, 2, 2, 2),
+			vc_num_out_vec               => (2, 2, 2, 2, 2),
+			vc_depth_array               => ((2, 2), (2, 2), (2, 2), (2, 2), (2, 2)),
+			vc_depth_out_array           => ((2, 2), (2, 2), (2, 2), (2, 2), (2, 2)),
+			rout_algo                    => "XYZ"
+		)
+		port map(
+			clk                => clk,
+			rst                => rst,
+			data_rx            => data_in210,
+			vc_write_rx_vec    => vc_write_rx_vec210,
+			incr_rx_vec        => incr_rx_vec210,
+			data_tx_pl         => data_out210,
+			vc_write_tx_pl_vec => vc_write_tx_pl_vec210,
+			incr_tx_pl_vec     => incr_tx_pl_vec210
+		);
+	--------------------------------------------------------------------------
+	-- Router port connections to adjacent routers
+	--------------------------------------------------------------------------
+	data_in310(0)                                  <= inter_data_in(3)(1)(0)(0);
+	inter_data_out(3)(1)(0)(0)                     <= data_out310(0);
+	incr_rx_vec310(2 - 1 downto 0)                 <= inter_incr_in(3)(1)(0)(0)(2 - 1 downto 0);
+	inter_incr_out(3)(1)(0)(0)(2 - 1 downto 0)     <= incr_tx_pl_vec310(2 - 1 downto 0);
+	vc_write_rx_vec310(2 - 1 downto 0)             <= inter_vc_write_in(3)(1)(0)(0)(2 - 1 downto 0);
+	inter_vc_write_out(3)(1)(0)(0)(2 - 1 downto 0) <= vc_write_tx_pl_vec310(2 - 1 downto 0);
+	data_in310(1)                                  <= inter_data_in(3)(1)(0)(1);
+	inter_data_out(3)(1)(0)(1)                     <= data_out310(1);
+	incr_rx_vec310(4 - 1 downto 2)                 <= inter_incr_in(3)(1)(0)(1)(2 - 1 downto 0);
+	inter_incr_out(3)(1)(0)(1)(2 - 1 downto 0)     <= incr_tx_pl_vec310(4 - 1 downto 2);
+	vc_write_rx_vec310(4 - 1 downto 2)             <= inter_vc_write_in(3)(1)(0)(1)(2 - 1 downto 0);
+	inter_vc_write_out(3)(1)(0)(1)(2 - 1 downto 0) <= vc_write_tx_pl_vec310(4 - 1 downto 2);
+
+	inter_data_in(3)(1)(0)(1) <= inter_data_out(3)(1 + 1)(0)(3);
+
+	inter_incr_in(3)(1)(0)(1) <= inter_incr_out(3)(1 + 1)(0)(3);
+
+	inter_vc_write_in(3)(1)(0)(1)                  <= inter_vc_write_out(3)(1 + 1)(0)(3);
+	data_in310(2)                                  <= inter_data_in(3)(1)(0)(3);
+	inter_data_out(3)(1)(0)(3)                     <= data_out310(2);
+	incr_rx_vec310(6 - 1 downto 4)                 <= inter_incr_in(3)(1)(0)(3)(2 - 1 downto 0);
+	inter_incr_out(3)(1)(0)(3)(2 - 1 downto 0)     <= incr_tx_pl_vec310(6 - 1 downto 4);
+	vc_write_rx_vec310(6 - 1 downto 4)             <= inter_vc_write_in(3)(1)(0)(3)(2 - 1 downto 0);
+	inter_vc_write_out(3)(1)(0)(3)(2 - 1 downto 0) <= vc_write_tx_pl_vec310(6 - 1 downto 4);
+
+	inter_data_in(3)(1)(0)(3) <= inter_data_out(3)(1 - 1)(0)(1);
+
+	inter_incr_in(3)(1)(0)(3) <= inter_incr_out(3)(1 - 1)(0)(1);
+
+	inter_vc_write_in(3)(1)(0)(3)                  <= inter_vc_write_out(3)(1 - 1)(0)(1);
+	data_in310(3)                                  <= inter_data_in(3)(1)(0)(4);
+	inter_data_out(3)(1)(0)(4)                     <= data_out310(3);
+	incr_rx_vec310(8 - 1 downto 6)                 <= inter_incr_in(3)(1)(0)(4)(2 - 1 downto 0);
+	inter_incr_out(3)(1)(0)(4)(2 - 1 downto 0)     <= incr_tx_pl_vec310(8 - 1 downto 6);
+	vc_write_rx_vec310(8 - 1 downto 6)             <= inter_vc_write_in(3)(1)(0)(4)(2 - 1 downto 0);
+	inter_vc_write_out(3)(1)(0)(4)(2 - 1 downto 0) <= vc_write_tx_pl_vec310(8 - 1 downto 6);
+
+	inter_data_in(3)(1)(0)(4) <= inter_data_out(3 - 1)(1)(0)(2);
+
+	inter_incr_in(3)(1)(0)(4) <= inter_incr_out(3 - 1)(1)(0)(2);
+
+	inter_vc_write_in(3)(1)(0)(4) <= inter_vc_write_out(3 - 1)(1)(0)(2);
+
+	inter_data_in(3)(1)(0)(0) <= local_rx(7);
+	local_tx(7)               <= inter_data_out(3)(1)(0)(0);
+
+	inter_incr_in(3)(1)(0)(0)(2 - 1 downto 0) <= local_incr_rx_vec(16 - 1 downto 14);
+	local_incr_tx_vec(16 - 1 downto 14)       <= inter_incr_out(3)(1)(0)(0)(2 - 1 downto 0);
+
+	inter_vc_write_in(3)(1)(0)(0)(2 - 1 downto 0) <= local_vc_write_rx(16 - 1 downto 14);
+	local_vc_write_tx(16 - 1 downto 14)           <= inter_vc_write_out(3)(1)(0)(0)(2 - 1 downto 0);
+
+	--------------------------------------------------------------------------
+	-- Router at x= 3 y=1 z=0
+	--------------------------------------------------------------------------
+	router_310 : entity work.router_pl
+		generic map(
+			port_num                     => 4,
+			Xis                          => 3,
+			Yis                          => 1,
+			Zis                          => 0,
+			header_incl_in_packet_length => true,
+			port_exist                   => (0, 1, 3, 4),
+			vc_num_vec                   => (2, 2, 2, 2),
+			vc_num_out_vec               => (2, 2, 2, 2),
+			vc_depth_array               => ((2, 2), (2, 2), (2, 2), (2, 2)),
+			vc_depth_out_array           => ((2, 2), (2, 2), (2, 2), (2, 2)),
+			rout_algo                    => "XYZ"
+		)
+		port map(
+			clk                => clk,
+			rst                => rst,
+			data_rx            => data_in310,
+			vc_write_rx_vec    => vc_write_rx_vec310,
+			incr_rx_vec        => incr_rx_vec310,
+			data_tx_pl         => data_out310,
+			vc_write_tx_pl_vec => vc_write_tx_pl_vec310,
+			incr_tx_pl_vec     => incr_tx_pl_vec310
+		);
+	--------------------------------------------------------------------------
+	-- Router port connections to adjacent routers
+	--------------------------------------------------------------------------
+	data_in020(0)                                  <= inter_data_in(0)(2)(0)(0);
+	inter_data_out(0)(2)(0)(0)                     <= data_out020(0);
+	incr_rx_vec020(2 - 1 downto 0)                 <= inter_incr_in(0)(2)(0)(0)(2 - 1 downto 0);
+	inter_incr_out(0)(2)(0)(0)(2 - 1 downto 0)     <= incr_tx_pl_vec020(2 - 1 downto 0);
+	vc_write_rx_vec020(2 - 1 downto 0)             <= inter_vc_write_in(0)(2)(0)(0)(2 - 1 downto 0);
+	inter_vc_write_out(0)(2)(0)(0)(2 - 1 downto 0) <= vc_write_tx_pl_vec020(2 - 1 downto 0);
+	data_in020(1)                                  <= inter_data_in(0)(2)(0)(1);
+	inter_data_out(0)(2)(0)(1)                     <= data_out020(1);
+	incr_rx_vec020(4 - 1 downto 2)                 <= inter_incr_in(0)(2)(0)(1)(2 - 1 downto 0);
+	inter_incr_out(0)(2)(0)(1)(2 - 1 downto 0)     <= incr_tx_pl_vec020(4 - 1 downto 2);
+	vc_write_rx_vec020(4 - 1 downto 2)             <= inter_vc_write_in(0)(2)(0)(1)(2 - 1 downto 0);
+	inter_vc_write_out(0)(2)(0)(1)(2 - 1 downto 0) <= vc_write_tx_pl_vec020(4 - 1 downto 2);
+
+	inter_data_in(0)(2)(0)(1) <= inter_data_out(0)(2 + 1)(0)(3);
+
+	inter_incr_in(0)(2)(0)(1) <= inter_incr_out(0)(2 + 1)(0)(3);
+
+	inter_vc_write_in(0)(2)(0)(1)                  <= inter_vc_write_out(0)(2 + 1)(0)(3);
+	data_in020(2)                                  <= inter_data_in(0)(2)(0)(2);
+	inter_data_out(0)(2)(0)(2)                     <= data_out020(2);
+	incr_rx_vec020(6 - 1 downto 4)                 <= inter_incr_in(0)(2)(0)(2)(2 - 1 downto 0);
+	inter_incr_out(0)(2)(0)(2)(2 - 1 downto 0)     <= incr_tx_pl_vec020(6 - 1 downto 4);
+	vc_write_rx_vec020(6 - 1 downto 4)             <= inter_vc_write_in(0)(2)(0)(2)(2 - 1 downto 0);
+	inter_vc_write_out(0)(2)(0)(2)(2 - 1 downto 0) <= vc_write_tx_pl_vec020(6 - 1 downto 4);
+
+	inter_data_in(0)(2)(0)(2) <= inter_data_out(0 + 1)(2)(0)(4);
+
+	inter_incr_in(0)(2)(0)(2) <= inter_incr_out(0 + 1)(2)(0)(4);
+
+	inter_vc_write_in(0)(2)(0)(2)                  <= inter_vc_write_out(0 + 1)(2)(0)(4);
+	data_in020(3)                                  <= inter_data_in(0)(2)(0)(3);
+	inter_data_out(0)(2)(0)(3)                     <= data_out020(3);
+	incr_rx_vec020(8 - 1 downto 6)                 <= inter_incr_in(0)(2)(0)(3)(2 - 1 downto 0);
+	inter_incr_out(0)(2)(0)(3)(2 - 1 downto 0)     <= incr_tx_pl_vec020(8 - 1 downto 6);
+	vc_write_rx_vec020(8 - 1 downto 6)             <= inter_vc_write_in(0)(2)(0)(3)(2 - 1 downto 0);
+	inter_vc_write_out(0)(2)(0)(3)(2 - 1 downto 0) <= vc_write_tx_pl_vec020(8 - 1 downto 6);
+
+	inter_data_in(0)(2)(0)(3) <= inter_data_out(0)(2 - 1)(0)(1);
+
+	inter_incr_in(0)(2)(0)(3) <= inter_incr_out(0)(2 - 1)(0)(1);
+
+	inter_vc_write_in(0)(2)(0)(3) <= inter_vc_write_out(0)(2 - 1)(0)(1);
+
+	inter_data_in(0)(2)(0)(0) <= local_rx(8);
+	local_tx(8)               <= inter_data_out(0)(2)(0)(0);
+
+	inter_incr_in(0)(2)(0)(0)(2 - 1 downto 0) <= local_incr_rx_vec(18 - 1 downto 16);
+	local_incr_tx_vec(18 - 1 downto 16)       <= inter_incr_out(0)(2)(0)(0)(2 - 1 downto 0);
+
+	inter_vc_write_in(0)(2)(0)(0)(2 - 1 downto 0) <= local_vc_write_rx(18 - 1 downto 16);
+	local_vc_write_tx(18 - 1 downto 16)           <= inter_vc_write_out(0)(2)(0)(0)(2 - 1 downto 0);
+
+	--------------------------------------------------------------------------
+	-- Router at x= 0 y=2 z=0
+	--------------------------------------------------------------------------
+	router_020 : entity work.router_pl
+		generic map(
+			port_num                     => 4,
+			Xis                          => 0,
+			Yis                          => 2,
+			Zis                          => 0,
+			header_incl_in_packet_length => true,
+			port_exist                   => (0, 1, 2, 3),
+			vc_num_vec                   => (2, 2, 2, 2),
+			vc_num_out_vec               => (2, 2, 2, 2),
+			vc_depth_array               => ((2, 2), (2, 2), (2, 2), (2, 2)),
+			vc_depth_out_array           => ((2, 2), (2, 2), (2, 2), (2, 2)),
+			rout_algo                    => "XYZ"
+		)
+		port map(
+			clk                => clk,
+			rst                => rst,
+			data_rx            => data_in020,
+			vc_write_rx_vec    => vc_write_rx_vec020,
+			incr_rx_vec        => incr_rx_vec020,
+			data_tx_pl         => data_out020,
+			vc_write_tx_pl_vec => vc_write_tx_pl_vec020,
+			incr_tx_pl_vec     => incr_tx_pl_vec020
+		);
+	--------------------------------------------------------------------------
+	-- Router port connections to adjacent routers
+	--------------------------------------------------------------------------
+	data_in120(0)                                  <= inter_data_in(1)(2)(0)(0);
+	inter_data_out(1)(2)(0)(0)                     <= data_out120(0);
+	incr_rx_vec120(2 - 1 downto 0)                 <= inter_incr_in(1)(2)(0)(0)(2 - 1 downto 0);
+	inter_incr_out(1)(2)(0)(0)(2 - 1 downto 0)     <= incr_tx_pl_vec120(2 - 1 downto 0);
+	vc_write_rx_vec120(2 - 1 downto 0)             <= inter_vc_write_in(1)(2)(0)(0)(2 - 1 downto 0);
+	inter_vc_write_out(1)(2)(0)(0)(2 - 1 downto 0) <= vc_write_tx_pl_vec120(2 - 1 downto 0);
+	data_in120(1)                                  <= inter_data_in(1)(2)(0)(1);
+	inter_data_out(1)(2)(0)(1)                     <= data_out120(1);
+	incr_rx_vec120(4 - 1 downto 2)                 <= inter_incr_in(1)(2)(0)(1)(2 - 1 downto 0);
+	inter_incr_out(1)(2)(0)(1)(2 - 1 downto 0)     <= incr_tx_pl_vec120(4 - 1 downto 2);
+	vc_write_rx_vec120(4 - 1 downto 2)             <= inter_vc_write_in(1)(2)(0)(1)(2 - 1 downto 0);
+	inter_vc_write_out(1)(2)(0)(1)(2 - 1 downto 0) <= vc_write_tx_pl_vec120(4 - 1 downto 2);
+
+	inter_data_in(1)(2)(0)(1) <= inter_data_out(1)(2 + 1)(0)(3);
+
+	inter_incr_in(1)(2)(0)(1) <= inter_incr_out(1)(2 + 1)(0)(3);
+
+	inter_vc_write_in(1)(2)(0)(1)                  <= inter_vc_write_out(1)(2 + 1)(0)(3);
+	data_in120(2)                                  <= inter_data_in(1)(2)(0)(2);
+	inter_data_out(1)(2)(0)(2)                     <= data_out120(2);
+	incr_rx_vec120(6 - 1 downto 4)                 <= inter_incr_in(1)(2)(0)(2)(2 - 1 downto 0);
+	inter_incr_out(1)(2)(0)(2)(2 - 1 downto 0)     <= incr_tx_pl_vec120(6 - 1 downto 4);
+	vc_write_rx_vec120(6 - 1 downto 4)             <= inter_vc_write_in(1)(2)(0)(2)(2 - 1 downto 0);
+	inter_vc_write_out(1)(2)(0)(2)(2 - 1 downto 0) <= vc_write_tx_pl_vec120(6 - 1 downto 4);
+
+	inter_data_in(1)(2)(0)(2) <= inter_data_out(1 + 1)(2)(0)(4);
+
+	inter_incr_in(1)(2)(0)(2) <= inter_incr_out(1 + 1)(2)(0)(4);
+
+	inter_vc_write_in(1)(2)(0)(2)                  <= inter_vc_write_out(1 + 1)(2)(0)(4);
+	data_in120(3)                                  <= inter_data_in(1)(2)(0)(3);
+	inter_data_out(1)(2)(0)(3)                     <= data_out120(3);
+	incr_rx_vec120(8 - 1 downto 6)                 <= inter_incr_in(1)(2)(0)(3)(2 - 1 downto 0);
+	inter_incr_out(1)(2)(0)(3)(2 - 1 downto 0)     <= incr_tx_pl_vec120(8 - 1 downto 6);
+	vc_write_rx_vec120(8 - 1 downto 6)             <= inter_vc_write_in(1)(2)(0)(3)(2 - 1 downto 0);
+	inter_vc_write_out(1)(2)(0)(3)(2 - 1 downto 0) <= vc_write_tx_pl_vec120(8 - 1 downto 6);
+
+	inter_data_in(1)(2)(0)(3) <= inter_data_out(1)(2 - 1)(0)(1);
+
+	inter_incr_in(1)(2)(0)(3) <= inter_incr_out(1)(2 - 1)(0)(1);
+
+	inter_vc_write_in(1)(2)(0)(3)                  <= inter_vc_write_out(1)(2 - 1)(0)(1);
+	data_in120(4)                                  <= inter_data_in(1)(2)(0)(4);
+	inter_data_out(1)(2)(0)(4)                     <= data_out120(4);
+	incr_rx_vec120(10 - 1 downto 8)                <= inter_incr_in(1)(2)(0)(4)(2 - 1 downto 0);
+	inter_incr_out(1)(2)(0)(4)(2 - 1 downto 0)     <= incr_tx_pl_vec120(10 - 1 downto 8);
+	vc_write_rx_vec120(10 - 1 downto 8)            <= inter_vc_write_in(1)(2)(0)(4)(2 - 1 downto 0);
+	inter_vc_write_out(1)(2)(0)(4)(2 - 1 downto 0) <= vc_write_tx_pl_vec120(10 - 1 downto 8);
+
+	inter_data_in(1)(2)(0)(4) <= inter_data_out(1 - 1)(2)(0)(2);
+
+	inter_incr_in(1)(2)(0)(4) <= inter_incr_out(1 - 1)(2)(0)(2);
+
+	inter_vc_write_in(1)(2)(0)(4) <= inter_vc_write_out(1 - 1)(2)(0)(2);
+
+	inter_data_in(1)(2)(0)(0) <= local_rx(9);
+	local_tx(9)               <= inter_data_out(1)(2)(0)(0);
+
+	inter_incr_in(1)(2)(0)(0)(2 - 1 downto 0) <= local_incr_rx_vec(20 - 1 downto 18);
+	local_incr_tx_vec(20 - 1 downto 18)       <= inter_incr_out(1)(2)(0)(0)(2 - 1 downto 0);
+
+	inter_vc_write_in(1)(2)(0)(0)(2 - 1 downto 0) <= local_vc_write_rx(20 - 1 downto 18);
+	local_vc_write_tx(20 - 1 downto 18)           <= inter_vc_write_out(1)(2)(0)(0)(2 - 1 downto 0);
+
+	--------------------------------------------------------------------------
+	-- Router at x= 1 y=2 z=0
+	--------------------------------------------------------------------------
+	router_120 : entity work.router_pl
+		generic map(
+			port_num                     => 5,
+			Xis                          => 1,
+			Yis                          => 2,
+			Zis                          => 0,
+			header_incl_in_packet_length => true,
+			port_exist                   => (0, 1, 2, 3, 4),
+			vc_num_vec                   => (2, 2, 2, 2, 2),
+			vc_num_out_vec               => (2, 2, 2, 2, 2),
+			vc_depth_array               => ((2, 2), (2, 2), (2, 2), (2, 2), (2, 2)),
+			vc_depth_out_array           => ((2, 2), (2, 2), (2, 2), (2, 2), (2, 2)),
+			rout_algo                    => "XYZ"
+		)
+		port map(
+			clk                => clk,
+			rst                => rst,
+			data_rx            => data_in120,
+			vc_write_rx_vec    => vc_write_rx_vec120,
+			incr_rx_vec        => incr_rx_vec120,
+			data_tx_pl         => data_out120,
+			vc_write_tx_pl_vec => vc_write_tx_pl_vec120,
+			incr_tx_pl_vec     => incr_tx_pl_vec120
+		);
+	--------------------------------------------------------------------------
+	-- Router port connections to adjacent routers
+	--------------------------------------------------------------------------
+	data_in220(0)                                  <= inter_data_in(2)(2)(0)(0);
+	inter_data_out(2)(2)(0)(0)                     <= data_out220(0);
+	incr_rx_vec220(2 - 1 downto 0)                 <= inter_incr_in(2)(2)(0)(0)(2 - 1 downto 0);
+	inter_incr_out(2)(2)(0)(0)(2 - 1 downto 0)     <= incr_tx_pl_vec220(2 - 1 downto 0);
+	vc_write_rx_vec220(2 - 1 downto 0)             <= inter_vc_write_in(2)(2)(0)(0)(2 - 1 downto 0);
+	inter_vc_write_out(2)(2)(0)(0)(2 - 1 downto 0) <= vc_write_tx_pl_vec220(2 - 1 downto 0);
+	data_in220(1)                                  <= inter_data_in(2)(2)(0)(1);
+	inter_data_out(2)(2)(0)(1)                     <= data_out220(1);
+	incr_rx_vec220(4 - 1 downto 2)                 <= inter_incr_in(2)(2)(0)(1)(2 - 1 downto 0);
+	inter_incr_out(2)(2)(0)(1)(2 - 1 downto 0)     <= incr_tx_pl_vec220(4 - 1 downto 2);
+	vc_write_rx_vec220(4 - 1 downto 2)             <= inter_vc_write_in(2)(2)(0)(1)(2 - 1 downto 0);
+	inter_vc_write_out(2)(2)(0)(1)(2 - 1 downto 0) <= vc_write_tx_pl_vec220(4 - 1 downto 2);
+
+	inter_data_in(2)(2)(0)(1) <= inter_data_out(2)(2 + 1)(0)(3);
+
+	inter_incr_in(2)(2)(0)(1) <= inter_incr_out(2)(2 + 1)(0)(3);
+
+	inter_vc_write_in(2)(2)(0)(1)                  <= inter_vc_write_out(2)(2 + 1)(0)(3);
+	data_in220(2)                                  <= inter_data_in(2)(2)(0)(2);
+	inter_data_out(2)(2)(0)(2)                     <= data_out220(2);
+	incr_rx_vec220(6 - 1 downto 4)                 <= inter_incr_in(2)(2)(0)(2)(2 - 1 downto 0);
+	inter_incr_out(2)(2)(0)(2)(2 - 1 downto 0)     <= incr_tx_pl_vec220(6 - 1 downto 4);
+	vc_write_rx_vec220(6 - 1 downto 4)             <= inter_vc_write_in(2)(2)(0)(2)(2 - 1 downto 0);
+	inter_vc_write_out(2)(2)(0)(2)(2 - 1 downto 0) <= vc_write_tx_pl_vec220(6 - 1 downto 4);
+
+	inter_data_in(2)(2)(0)(2) <= inter_data_out(2 + 1)(2)(0)(4);
+
+	inter_incr_in(2)(2)(0)(2) <= inter_incr_out(2 + 1)(2)(0)(4);
+
+	inter_vc_write_in(2)(2)(0)(2)                  <= inter_vc_write_out(2 + 1)(2)(0)(4);
+	data_in220(3)                                  <= inter_data_in(2)(2)(0)(3);
+	inter_data_out(2)(2)(0)(3)                     <= data_out220(3);
+	incr_rx_vec220(8 - 1 downto 6)                 <= inter_incr_in(2)(2)(0)(3)(2 - 1 downto 0);
+	inter_incr_out(2)(2)(0)(3)(2 - 1 downto 0)     <= incr_tx_pl_vec220(8 - 1 downto 6);
+	vc_write_rx_vec220(8 - 1 downto 6)             <= inter_vc_write_in(2)(2)(0)(3)(2 - 1 downto 0);
+	inter_vc_write_out(2)(2)(0)(3)(2 - 1 downto 0) <= vc_write_tx_pl_vec220(8 - 1 downto 6);
+
+	inter_data_in(2)(2)(0)(3) <= inter_data_out(2)(2 - 1)(0)(1);
+
+	inter_incr_in(2)(2)(0)(3) <= inter_incr_out(2)(2 - 1)(0)(1);
+
+	inter_vc_write_in(2)(2)(0)(3)                  <= inter_vc_write_out(2)(2 - 1)(0)(1);
+	data_in220(4)                                  <= inter_data_in(2)(2)(0)(4);
+	inter_data_out(2)(2)(0)(4)                     <= data_out220(4);
+	incr_rx_vec220(10 - 1 downto 8)                <= inter_incr_in(2)(2)(0)(4)(2 - 1 downto 0);
+	inter_incr_out(2)(2)(0)(4)(2 - 1 downto 0)     <= incr_tx_pl_vec220(10 - 1 downto 8);
+	vc_write_rx_vec220(10 - 1 downto 8)            <= inter_vc_write_in(2)(2)(0)(4)(2 - 1 downto 0);
+	inter_vc_write_out(2)(2)(0)(4)(2 - 1 downto 0) <= vc_write_tx_pl_vec220(10 - 1 downto 8);
+
+	inter_data_in(2)(2)(0)(4) <= inter_data_out(2 - 1)(2)(0)(2);
+
+	inter_incr_in(2)(2)(0)(4) <= inter_incr_out(2 - 1)(2)(0)(2);
+
+	inter_vc_write_in(2)(2)(0)(4) <= inter_vc_write_out(2 - 1)(2)(0)(2);
+
+	inter_data_in(2)(2)(0)(0) <= local_rx(10);
+	local_tx(10)              <= inter_data_out(2)(2)(0)(0);
+
+	inter_incr_in(2)(2)(0)(0)(2 - 1 downto 0) <= local_incr_rx_vec(22 - 1 downto 20);
+	local_incr_tx_vec(22 - 1 downto 20)       <= inter_incr_out(2)(2)(0)(0)(2 - 1 downto 0);
+
+	inter_vc_write_in(2)(2)(0)(0)(2 - 1 downto 0) <= local_vc_write_rx(22 - 1 downto 20);
+	local_vc_write_tx(22 - 1 downto 20)           <= inter_vc_write_out(2)(2)(0)(0)(2 - 1 downto 0);
+
+	--------------------------------------------------------------------------
+	-- Router at x= 2 y=2 z=0
+	--------------------------------------------------------------------------
+	router_220 : entity work.router_pl
+		generic map(
+			port_num                     => 5,
+			Xis                          => 2,
+			Yis                          => 2,
+			Zis                          => 0,
+			header_incl_in_packet_length => true,
+			port_exist                   => (0, 1, 2, 3, 4),
+			vc_num_vec                   => (2, 2, 2, 2, 2),
+			vc_num_out_vec               => (2, 2, 2, 2, 2),
+			vc_depth_array               => ((2, 2), (2, 2), (2, 2), (2, 2), (2, 2)),
+			vc_depth_out_array           => ((2, 2), (2, 2), (2, 2), (2, 2), (2, 2)),
+			rout_algo                    => "XYZ"
+		)
+		port map(
+			clk                => clk,
+			rst                => rst,
+			data_rx            => data_in220,
+			vc_write_rx_vec    => vc_write_rx_vec220,
+			incr_rx_vec        => incr_rx_vec220,
+			data_tx_pl         => data_out220,
+			vc_write_tx_pl_vec => vc_write_tx_pl_vec220,
+			incr_tx_pl_vec     => incr_tx_pl_vec220
+		);
+	--------------------------------------------------------------------------
+	-- Router port connections to adjacent routers
+	--------------------------------------------------------------------------
+	data_in320(0)                                  <= inter_data_in(3)(2)(0)(0);
+	inter_data_out(3)(2)(0)(0)                     <= data_out320(0);
+	incr_rx_vec320(2 - 1 downto 0)                 <= inter_incr_in(3)(2)(0)(0)(2 - 1 downto 0);
+	inter_incr_out(3)(2)(0)(0)(2 - 1 downto 0)     <= incr_tx_pl_vec320(2 - 1 downto 0);
+	vc_write_rx_vec320(2 - 1 downto 0)             <= inter_vc_write_in(3)(2)(0)(0)(2 - 1 downto 0);
+	inter_vc_write_out(3)(2)(0)(0)(2 - 1 downto 0) <= vc_write_tx_pl_vec320(2 - 1 downto 0);
+	data_in320(1)                                  <= inter_data_in(3)(2)(0)(1);
+	inter_data_out(3)(2)(0)(1)                     <= data_out320(1);
+	incr_rx_vec320(4 - 1 downto 2)                 <= inter_incr_in(3)(2)(0)(1)(2 - 1 downto 0);
+	inter_incr_out(3)(2)(0)(1)(2 - 1 downto 0)     <= incr_tx_pl_vec320(4 - 1 downto 2);
+	vc_write_rx_vec320(4 - 1 downto 2)             <= inter_vc_write_in(3)(2)(0)(1)(2 - 1 downto 0);
+	inter_vc_write_out(3)(2)(0)(1)(2 - 1 downto 0) <= vc_write_tx_pl_vec320(4 - 1 downto 2);
+
+	inter_data_in(3)(2)(0)(1) <= inter_data_out(3)(2 + 1)(0)(3);
+
+	inter_incr_in(3)(2)(0)(1) <= inter_incr_out(3)(2 + 1)(0)(3);
+
+	inter_vc_write_in(3)(2)(0)(1)                  <= inter_vc_write_out(3)(2 + 1)(0)(3);
+	data_in320(2)                                  <= inter_data_in(3)(2)(0)(3);
+	inter_data_out(3)(2)(0)(3)                     <= data_out320(2);
+	incr_rx_vec320(6 - 1 downto 4)                 <= inter_incr_in(3)(2)(0)(3)(2 - 1 downto 0);
+	inter_incr_out(3)(2)(0)(3)(2 - 1 downto 0)     <= incr_tx_pl_vec320(6 - 1 downto 4);
+	vc_write_rx_vec320(6 - 1 downto 4)             <= inter_vc_write_in(3)(2)(0)(3)(2 - 1 downto 0);
+	inter_vc_write_out(3)(2)(0)(3)(2 - 1 downto 0) <= vc_write_tx_pl_vec320(6 - 1 downto 4);
+
+	inter_data_in(3)(2)(0)(3) <= inter_data_out(3)(2 - 1)(0)(1);
+
+	inter_incr_in(3)(2)(0)(3) <= inter_incr_out(3)(2 - 1)(0)(1);
+
+	inter_vc_write_in(3)(2)(0)(3)                  <= inter_vc_write_out(3)(2 - 1)(0)(1);
+	data_in320(3)                                  <= inter_data_in(3)(2)(0)(4);
+	inter_data_out(3)(2)(0)(4)                     <= data_out320(3);
+	incr_rx_vec320(8 - 1 downto 6)                 <= inter_incr_in(3)(2)(0)(4)(2 - 1 downto 0);
+	inter_incr_out(3)(2)(0)(4)(2 - 1 downto 0)     <= incr_tx_pl_vec320(8 - 1 downto 6);
+	vc_write_rx_vec320(8 - 1 downto 6)             <= inter_vc_write_in(3)(2)(0)(4)(2 - 1 downto 0);
+	inter_vc_write_out(3)(2)(0)(4)(2 - 1 downto 0) <= vc_write_tx_pl_vec320(8 - 1 downto 6);
+
+	inter_data_in(3)(2)(0)(4) <= inter_data_out(3 - 1)(2)(0)(2);
+
+	inter_incr_in(3)(2)(0)(4) <= inter_incr_out(3 - 1)(2)(0)(2);
+
+	inter_vc_write_in(3)(2)(0)(4) <= inter_vc_write_out(3 - 1)(2)(0)(2);
+
+	inter_data_in(3)(2)(0)(0) <= local_rx(11);
+	local_tx(11)              <= inter_data_out(3)(2)(0)(0);
+
+	inter_incr_in(3)(2)(0)(0)(2 - 1 downto 0) <= local_incr_rx_vec(24 - 1 downto 22);
+	local_incr_tx_vec(24 - 1 downto 22)       <= inter_incr_out(3)(2)(0)(0)(2 - 1 downto 0);
+
+	inter_vc_write_in(3)(2)(0)(0)(2 - 1 downto 0) <= local_vc_write_rx(24 - 1 downto 22);
+	local_vc_write_tx(24 - 1 downto 22)           <= inter_vc_write_out(3)(2)(0)(0)(2 - 1 downto 0);
+
+	--------------------------------------------------------------------------
+	-- Router at x= 3 y=2 z=0
+	--------------------------------------------------------------------------
+	router_320 : entity work.router_pl
+		generic map(
+			port_num                     => 4,
+			Xis                          => 3,
+			Yis                          => 2,
+			Zis                          => 0,
+			header_incl_in_packet_length => true,
+			port_exist                   => (0, 1, 3, 4),
+			vc_num_vec                   => (2, 2, 2, 2),
+			vc_num_out_vec               => (2, 2, 2, 2),
+			vc_depth_array               => ((2, 2), (2, 2), (2, 2), (2, 2)),
+			vc_depth_out_array           => ((2, 2), (2, 2), (2, 2), (2, 2)),
+			rout_algo                    => "XYZ"
+		)
+		port map(
+			clk                => clk,
+			rst                => rst,
+			data_rx            => data_in320,
+			vc_write_rx_vec    => vc_write_rx_vec320,
+			incr_rx_vec        => incr_rx_vec320,
+			data_tx_pl         => data_out320,
+			vc_write_tx_pl_vec => vc_write_tx_pl_vec320,
+			incr_tx_pl_vec     => incr_tx_pl_vec320
+		);
+	--------------------------------------------------------------------------
+	-- Router port connections to adjacent routers
+	--------------------------------------------------------------------------
+	data_in030(0)                                  <= inter_data_in(0)(3)(0)(0);
+	inter_data_out(0)(3)(0)(0)                     <= data_out030(0);
+	incr_rx_vec030(2 - 1 downto 0)                 <= inter_incr_in(0)(3)(0)(0)(2 - 1 downto 0);
+	inter_incr_out(0)(3)(0)(0)(2 - 1 downto 0)     <= incr_tx_pl_vec030(2 - 1 downto 0);
+	vc_write_rx_vec030(2 - 1 downto 0)             <= inter_vc_write_in(0)(3)(0)(0)(2 - 1 downto 0);
+	inter_vc_write_out(0)(3)(0)(0)(2 - 1 downto 0) <= vc_write_tx_pl_vec030(2 - 1 downto 0);
+	data_in030(1)                                  <= inter_data_in(0)(3)(0)(2);
+	inter_data_out(0)(3)(0)(2)                     <= data_out030(1);
+	incr_rx_vec030(4 - 1 downto 2)                 <= inter_incr_in(0)(3)(0)(2)(2 - 1 downto 0);
+	inter_incr_out(0)(3)(0)(2)(2 - 1 downto 0)     <= incr_tx_pl_vec030(4 - 1 downto 2);
+	vc_write_rx_vec030(4 - 1 downto 2)             <= inter_vc_write_in(0)(3)(0)(2)(2 - 1 downto 0);
+	inter_vc_write_out(0)(3)(0)(2)(2 - 1 downto 0) <= vc_write_tx_pl_vec030(4 - 1 downto 2);
+
+	inter_data_in(0)(3)(0)(2) <= inter_data_out(0 + 1)(3)(0)(4);
+
+	inter_incr_in(0)(3)(0)(2) <= inter_incr_out(0 + 1)(3)(0)(4);
+
+	inter_vc_write_in(0)(3)(0)(2)                  <= inter_vc_write_out(0 + 1)(3)(0)(4);
+	data_in030(2)                                  <= inter_data_in(0)(3)(0)(3);
+	inter_data_out(0)(3)(0)(3)                     <= data_out030(2);
+	incr_rx_vec030(6 - 1 downto 4)                 <= inter_incr_in(0)(3)(0)(3)(2 - 1 downto 0);
+	inter_incr_out(0)(3)(0)(3)(2 - 1 downto 0)     <= incr_tx_pl_vec030(6 - 1 downto 4);
+	vc_write_rx_vec030(6 - 1 downto 4)             <= inter_vc_write_in(0)(3)(0)(3)(2 - 1 downto 0);
+	inter_vc_write_out(0)(3)(0)(3)(2 - 1 downto 0) <= vc_write_tx_pl_vec030(6 - 1 downto 4);
+
+	inter_data_in(0)(3)(0)(3) <= inter_data_out(0)(3 - 1)(0)(1);
+
+	inter_incr_in(0)(3)(0)(3) <= inter_incr_out(0)(3 - 1)(0)(1);
+
+	inter_vc_write_in(0)(3)(0)(3) <= inter_vc_write_out(0)(3 - 1)(0)(1);
+
+	inter_data_in(0)(3)(0)(0) <= local_rx(12);
+	local_tx(12)              <= inter_data_out(0)(3)(0)(0);
+
+	inter_incr_in(0)(3)(0)(0)(2 - 1 downto 0) <= local_incr_rx_vec(26 - 1 downto 24);
+	local_incr_tx_vec(26 - 1 downto 24)       <= inter_incr_out(0)(3)(0)(0)(2 - 1 downto 0);
+
+	inter_vc_write_in(0)(3)(0)(0)(2 - 1 downto 0) <= local_vc_write_rx(26 - 1 downto 24);
+	local_vc_write_tx(26 - 1 downto 24)           <= inter_vc_write_out(0)(3)(0)(0)(2 - 1 downto 0);
+
+	--------------------------------------------------------------------------
+	-- Router at x= 0 y=3 z=0
+	--------------------------------------------------------------------------
+	router_030 : entity work.router_pl
+		generic map(
+			port_num                     => 3,
+			Xis                          => 0,
+			Yis                          => 3,
+			Zis                          => 0,
+			header_incl_in_packet_length => true,
+			port_exist                   => (0, 2, 3),
+			vc_num_vec                   => (2, 2, 2),
+			vc_num_out_vec               => (2, 2, 2),
+			vc_depth_array               => ((2, 2), (2, 2), (2, 2)),
+			vc_depth_out_array           => ((2, 2), (2, 2), (2, 2)),
+			rout_algo                    => "XYZ"
+		)
+		port map(
+			clk                => clk,
+			rst                => rst,
+			data_rx            => data_in030,
+			vc_write_rx_vec    => vc_write_rx_vec030,
+			incr_rx_vec        => incr_rx_vec030,
+			data_tx_pl         => data_out030,
+			vc_write_tx_pl_vec => vc_write_tx_pl_vec030,
+			incr_tx_pl_vec     => incr_tx_pl_vec030
+		);
+	--------------------------------------------------------------------------
+	-- Router port connections to adjacent routers
+	--------------------------------------------------------------------------
+	data_in130(0)                                  <= inter_data_in(1)(3)(0)(0);
+	inter_data_out(1)(3)(0)(0)                     <= data_out130(0);
+	incr_rx_vec130(2 - 1 downto 0)                 <= inter_incr_in(1)(3)(0)(0)(2 - 1 downto 0);
+	inter_incr_out(1)(3)(0)(0)(2 - 1 downto 0)     <= incr_tx_pl_vec130(2 - 1 downto 0);
+	vc_write_rx_vec130(2 - 1 downto 0)             <= inter_vc_write_in(1)(3)(0)(0)(2 - 1 downto 0);
+	inter_vc_write_out(1)(3)(0)(0)(2 - 1 downto 0) <= vc_write_tx_pl_vec130(2 - 1 downto 0);
+	data_in130(1)                                  <= inter_data_in(1)(3)(0)(2);
+	inter_data_out(1)(3)(0)(2)                     <= data_out130(1);
+	incr_rx_vec130(4 - 1 downto 2)                 <= inter_incr_in(1)(3)(0)(2)(2 - 1 downto 0);
+	inter_incr_out(1)(3)(0)(2)(2 - 1 downto 0)     <= incr_tx_pl_vec130(4 - 1 downto 2);
+	vc_write_rx_vec130(4 - 1 downto 2)             <= inter_vc_write_in(1)(3)(0)(2)(2 - 1 downto 0);
+	inter_vc_write_out(1)(3)(0)(2)(2 - 1 downto 0) <= vc_write_tx_pl_vec130(4 - 1 downto 2);
+
+	inter_data_in(1)(3)(0)(2) <= inter_data_out(1 + 1)(3)(0)(4);
+
+	inter_incr_in(1)(3)(0)(2) <= inter_incr_out(1 + 1)(3)(0)(4);
+
+	inter_vc_write_in(1)(3)(0)(2)                  <= inter_vc_write_out(1 + 1)(3)(0)(4);
+	data_in130(2)                                  <= inter_data_in(1)(3)(0)(3);
+	inter_data_out(1)(3)(0)(3)                     <= data_out130(2);
+	incr_rx_vec130(6 - 1 downto 4)                 <= inter_incr_in(1)(3)(0)(3)(2 - 1 downto 0);
+	inter_incr_out(1)(3)(0)(3)(2 - 1 downto 0)     <= incr_tx_pl_vec130(6 - 1 downto 4);
+	vc_write_rx_vec130(6 - 1 downto 4)             <= inter_vc_write_in(1)(3)(0)(3)(2 - 1 downto 0);
+	inter_vc_write_out(1)(3)(0)(3)(2 - 1 downto 0) <= vc_write_tx_pl_vec130(6 - 1 downto 4);
+
+	inter_data_in(1)(3)(0)(3) <= inter_data_out(1)(3 - 1)(0)(1);
+
+	inter_incr_in(1)(3)(0)(3) <= inter_incr_out(1)(3 - 1)(0)(1);
+
+	inter_vc_write_in(1)(3)(0)(3)                  <= inter_vc_write_out(1)(3 - 1)(0)(1);
+	data_in130(3)                                  <= inter_data_in(1)(3)(0)(4);
+	inter_data_out(1)(3)(0)(4)                     <= data_out130(3);
+	incr_rx_vec130(8 - 1 downto 6)                 <= inter_incr_in(1)(3)(0)(4)(2 - 1 downto 0);
+	inter_incr_out(1)(3)(0)(4)(2 - 1 downto 0)     <= incr_tx_pl_vec130(8 - 1 downto 6);
+	vc_write_rx_vec130(8 - 1 downto 6)             <= inter_vc_write_in(1)(3)(0)(4)(2 - 1 downto 0);
+	inter_vc_write_out(1)(3)(0)(4)(2 - 1 downto 0) <= vc_write_tx_pl_vec130(8 - 1 downto 6);
+
+	inter_data_in(1)(3)(0)(4) <= inter_data_out(1 - 1)(3)(0)(2);
+
+	inter_incr_in(1)(3)(0)(4) <= inter_incr_out(1 - 1)(3)(0)(2);
+
+	inter_vc_write_in(1)(3)(0)(4) <= inter_vc_write_out(1 - 1)(3)(0)(2);
+
+	inter_data_in(1)(3)(0)(0) <= local_rx(13);
+	local_tx(13)              <= inter_data_out(1)(3)(0)(0);
+
+	inter_incr_in(1)(3)(0)(0)(2 - 1 downto 0) <= local_incr_rx_vec(28 - 1 downto 26);
+	local_incr_tx_vec(28 - 1 downto 26)       <= inter_incr_out(1)(3)(0)(0)(2 - 1 downto 0);
+
+	inter_vc_write_in(1)(3)(0)(0)(2 - 1 downto 0) <= local_vc_write_rx(28 - 1 downto 26);
+	local_vc_write_tx(28 - 1 downto 26)           <= inter_vc_write_out(1)(3)(0)(0)(2 - 1 downto 0);
+
+	--------------------------------------------------------------------------
+	-- Router at x= 1 y=3 z=0
+	--------------------------------------------------------------------------
+	router_130 : entity work.router_pl
+		generic map(
+			port_num                     => 4,
+			Xis                          => 1,
+			Yis                          => 3,
+			Zis                          => 0,
+			header_incl_in_packet_length => true,
+			port_exist                   => (0, 2, 3, 4),
+			vc_num_vec                   => (2, 2, 2, 2),
+			vc_num_out_vec               => (2, 2, 2, 2),
+			vc_depth_array               => ((2, 2), (2, 2), (2, 2), (2, 2)),
+			vc_depth_out_array           => ((2, 2), (2, 2), (2, 2), (2, 2)),
+			rout_algo                    => "XYZ"
+		)
+		port map(
+			clk                => clk,
+			rst                => rst,
+			data_rx            => data_in130,
+			vc_write_rx_vec    => vc_write_rx_vec130,
+			incr_rx_vec        => incr_rx_vec130,
+			data_tx_pl         => data_out130,
+			vc_write_tx_pl_vec => vc_write_tx_pl_vec130,
+			incr_tx_pl_vec     => incr_tx_pl_vec130
+		);
+	--------------------------------------------------------------------------
+	-- Router port connections to adjacent routers
+	--------------------------------------------------------------------------
+	data_in230(0)                                  <= inter_data_in(2)(3)(0)(0);
+	inter_data_out(2)(3)(0)(0)                     <= data_out230(0);
+	incr_rx_vec230(2 - 1 downto 0)                 <= inter_incr_in(2)(3)(0)(0)(2 - 1 downto 0);
+	inter_incr_out(2)(3)(0)(0)(2 - 1 downto 0)     <= incr_tx_pl_vec230(2 - 1 downto 0);
+	vc_write_rx_vec230(2 - 1 downto 0)             <= inter_vc_write_in(2)(3)(0)(0)(2 - 1 downto 0);
+	inter_vc_write_out(2)(3)(0)(0)(2 - 1 downto 0) <= vc_write_tx_pl_vec230(2 - 1 downto 0);
+	data_in230(1)                                  <= inter_data_in(2)(3)(0)(2);
+	inter_data_out(2)(3)(0)(2)                     <= data_out230(1);
+	incr_rx_vec230(4 - 1 downto 2)                 <= inter_incr_in(2)(3)(0)(2)(2 - 1 downto 0);
+	inter_incr_out(2)(3)(0)(2)(2 - 1 downto 0)     <= incr_tx_pl_vec230(4 - 1 downto 2);
+	vc_write_rx_vec230(4 - 1 downto 2)             <= inter_vc_write_in(2)(3)(0)(2)(2 - 1 downto 0);
+	inter_vc_write_out(2)(3)(0)(2)(2 - 1 downto 0) <= vc_write_tx_pl_vec230(4 - 1 downto 2);
+
+	inter_data_in(2)(3)(0)(2) <= inter_data_out(2 + 1)(3)(0)(4);
+
+	inter_incr_in(2)(3)(0)(2) <= inter_incr_out(2 + 1)(3)(0)(4);
+
+	inter_vc_write_in(2)(3)(0)(2)                  <= inter_vc_write_out(2 + 1)(3)(0)(4);
+	data_in230(2)                                  <= inter_data_in(2)(3)(0)(3);
+	inter_data_out(2)(3)(0)(3)                     <= data_out230(2);
+	incr_rx_vec230(6 - 1 downto 4)                 <= inter_incr_in(2)(3)(0)(3)(2 - 1 downto 0);
+	inter_incr_out(2)(3)(0)(3)(2 - 1 downto 0)     <= incr_tx_pl_vec230(6 - 1 downto 4);
+	vc_write_rx_vec230(6 - 1 downto 4)             <= inter_vc_write_in(2)(3)(0)(3)(2 - 1 downto 0);
+	inter_vc_write_out(2)(3)(0)(3)(2 - 1 downto 0) <= vc_write_tx_pl_vec230(6 - 1 downto 4);
+
+	inter_data_in(2)(3)(0)(3) <= inter_data_out(2)(3 - 1)(0)(1);
+
+	inter_incr_in(2)(3)(0)(3) <= inter_incr_out(2)(3 - 1)(0)(1);
+
+	inter_vc_write_in(2)(3)(0)(3)                  <= inter_vc_write_out(2)(3 - 1)(0)(1);
+	data_in230(3)                                  <= inter_data_in(2)(3)(0)(4);
+	inter_data_out(2)(3)(0)(4)                     <= data_out230(3);
+	incr_rx_vec230(8 - 1 downto 6)                 <= inter_incr_in(2)(3)(0)(4)(2 - 1 downto 0);
+	inter_incr_out(2)(3)(0)(4)(2 - 1 downto 0)     <= incr_tx_pl_vec230(8 - 1 downto 6);
+	vc_write_rx_vec230(8 - 1 downto 6)             <= inter_vc_write_in(2)(3)(0)(4)(2 - 1 downto 0);
+	inter_vc_write_out(2)(3)(0)(4)(2 - 1 downto 0) <= vc_write_tx_pl_vec230(8 - 1 downto 6);
+
+	inter_data_in(2)(3)(0)(4) <= inter_data_out(2 - 1)(3)(0)(2);
+
+	inter_incr_in(2)(3)(0)(4) <= inter_incr_out(2 - 1)(3)(0)(2);
+
+	inter_vc_write_in(2)(3)(0)(4) <= inter_vc_write_out(2 - 1)(3)(0)(2);
+
+	inter_data_in(2)(3)(0)(0) <= local_rx(14);
+	local_tx(14)              <= inter_data_out(2)(3)(0)(0);
+
+	inter_incr_in(2)(3)(0)(0)(2 - 1 downto 0) <= local_incr_rx_vec(30 - 1 downto 28);
+	local_incr_tx_vec(30 - 1 downto 28)       <= inter_incr_out(2)(3)(0)(0)(2 - 1 downto 0);
+
+	inter_vc_write_in(2)(3)(0)(0)(2 - 1 downto 0) <= local_vc_write_rx(30 - 1 downto 28);
+	local_vc_write_tx(30 - 1 downto 28)           <= inter_vc_write_out(2)(3)(0)(0)(2 - 1 downto 0);
+
+	--------------------------------------------------------------------------
+	-- Router at x= 2 y=3 z=0
+	--------------------------------------------------------------------------
+	router_230 : entity work.router_pl
+		generic map(
+			port_num                     => 4,
+			Xis                          => 2,
+			Yis                          => 3,
+			Zis                          => 0,
+			header_incl_in_packet_length => true,
+			port_exist                   => (0, 2, 3, 4),
+			vc_num_vec                   => (2, 2, 2, 2),
+			vc_num_out_vec               => (2, 2, 2, 2),
+			vc_depth_array               => ((2, 2), (2, 2), (2, 2), (2, 2)),
+			vc_depth_out_array           => ((2, 2), (2, 2), (2, 2), (2, 2)),
+			rout_algo                    => "XYZ"
+		)
+		port map(
+			clk                => clk,
+			rst                => rst,
+			data_rx            => data_in230,
+			vc_write_rx_vec    => vc_write_rx_vec230,
+			incr_rx_vec        => incr_rx_vec230,
+			data_tx_pl         => data_out230,
+			vc_write_tx_pl_vec => vc_write_tx_pl_vec230,
+			incr_tx_pl_vec     => incr_tx_pl_vec230
+		);
+	--------------------------------------------------------------------------
+	-- Router port connections to adjacent routers
+	--------------------------------------------------------------------------
+	data_in330(0)                                  <= inter_data_in(3)(3)(0)(0);
+	inter_data_out(3)(3)(0)(0)                     <= data_out330(0);
+	incr_rx_vec330(2 - 1 downto 0)                 <= inter_incr_in(3)(3)(0)(0)(2 - 1 downto 0);
+	inter_incr_out(3)(3)(0)(0)(2 - 1 downto 0)     <= incr_tx_pl_vec330(2 - 1 downto 0);
+	vc_write_rx_vec330(2 - 1 downto 0)             <= inter_vc_write_in(3)(3)(0)(0)(2 - 1 downto 0);
+	inter_vc_write_out(3)(3)(0)(0)(2 - 1 downto 0) <= vc_write_tx_pl_vec330(2 - 1 downto 0);
+	data_in330(1)                                  <= inter_data_in(3)(3)(0)(3);
+	inter_data_out(3)(3)(0)(3)                     <= data_out330(1);
+	incr_rx_vec330(4 - 1 downto 2)                 <= inter_incr_in(3)(3)(0)(3)(2 - 1 downto 0);
+	inter_incr_out(3)(3)(0)(3)(2 - 1 downto 0)     <= incr_tx_pl_vec330(4 - 1 downto 2);
+	vc_write_rx_vec330(4 - 1 downto 2)             <= inter_vc_write_in(3)(3)(0)(3)(2 - 1 downto 0);
+	inter_vc_write_out(3)(3)(0)(3)(2 - 1 downto 0) <= vc_write_tx_pl_vec330(4 - 1 downto 2);
+
+	inter_data_in(3)(3)(0)(3) <= inter_data_out(3)(3 - 1)(0)(1);
+
+	inter_incr_in(3)(3)(0)(3) <= inter_incr_out(3)(3 - 1)(0)(1);
+
+	inter_vc_write_in(3)(3)(0)(3)                  <= inter_vc_write_out(3)(3 - 1)(0)(1);
+	data_in330(2)                                  <= inter_data_in(3)(3)(0)(4);
+	inter_data_out(3)(3)(0)(4)                     <= data_out330(2);
+	incr_rx_vec330(6 - 1 downto 4)                 <= inter_incr_in(3)(3)(0)(4)(2 - 1 downto 0);
+	inter_incr_out(3)(3)(0)(4)(2 - 1 downto 0)     <= incr_tx_pl_vec330(6 - 1 downto 4);
+	vc_write_rx_vec330(6 - 1 downto 4)             <= inter_vc_write_in(3)(3)(0)(4)(2 - 1 downto 0);
+	inter_vc_write_out(3)(3)(0)(4)(2 - 1 downto 0) <= vc_write_tx_pl_vec330(6 - 1 downto 4);
+
+	inter_data_in(3)(3)(0)(4) <= inter_data_out(3 - 1)(3)(0)(2);
+
+	inter_incr_in(3)(3)(0)(4) <= inter_incr_out(3 - 1)(3)(0)(2);
+
+	inter_vc_write_in(3)(3)(0)(4) <= inter_vc_write_out(3 - 1)(3)(0)(2);
+
+	inter_data_in(3)(3)(0)(0) <= local_rx(15);
+	local_tx(15)              <= inter_data_out(3)(3)(0)(0);
+
+	inter_incr_in(3)(3)(0)(0)(2 - 1 downto 0) <= local_incr_rx_vec(32 - 1 downto 30);
+	local_incr_tx_vec(32 - 1 downto 30)       <= inter_incr_out(3)(3)(0)(0)(2 - 1 downto 0);
+
+	inter_vc_write_in(3)(3)(0)(0)(2 - 1 downto 0) <= local_vc_write_rx(32 - 1 downto 30);
+	local_vc_write_tx(32 - 1 downto 30)           <= inter_vc_write_out(3)(3)(0)(0)(2 - 1 downto 0);
+
+	--------------------------------------------------------------------------
+	-- Router at x= 3 y=3 z=0
+	--------------------------------------------------------------------------
+	router_330 : entity work.router_pl
+		generic map(
+			port_num                     => 3,
+			Xis                          => 3,
+			Yis                          => 3,
+			Zis                          => 0,
+			header_incl_in_packet_length => true,
+			port_exist                   => (0, 3, 4),
+			vc_num_vec                   => (2, 2, 2),
+			vc_num_out_vec               => (2, 2, 2),
+			vc_depth_array               => ((2, 2), (2, 2), (2, 2)),
+			vc_depth_out_array           => ((2, 2), (2, 2), (2, 2)),
+			rout_algo                    => "XYZ"
+		)
+		port map(
+			clk                => clk,
+			rst                => rst,
+			data_rx            => data_in330,
+			vc_write_rx_vec    => vc_write_rx_vec330,
+			incr_rx_vec        => incr_rx_vec330,
+			data_tx_pl         => data_out330,
+			vc_write_tx_pl_vec => vc_write_tx_pl_vec330,
+			incr_tx_pl_vec     => incr_tx_pl_vec330
+		);
+	--------------------------------------------------------------------------
+	-- Router port connections to adjacent routers
+	--------------------------------------------------------------------------
 end architecture structural;
