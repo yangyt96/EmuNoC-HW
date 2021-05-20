@@ -106,7 +106,7 @@ begin
 			read(input_line, next_inj_time);
 			temp_inj_time <= next_inj_time;
 
-			wait until (counter = temp_inj_time - 1) and rising_edge(clk);
+			wait until (counter >= temp_inj_time - 1) and rising_edge(clk);
 
 			-- Send Data into internal Buffer
 			for i in 0 to (temp_packet_length - 1) loop
