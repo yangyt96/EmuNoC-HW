@@ -42,13 +42,13 @@ architecture behave of top1 is
     signal local_incr_tx_vec : Std_logic_vector(num_io - 1 downto 0);
 
     signal a_axis_tready_1d_arr : Std_logic_vector(num_router - 1 downto 0);
-    signal a_axis_tdata_1d_arr  : Std_logic_vector(num_router * C_AXIS_TDATA_WIDTH - 1 downto 0);
+    signal a_axis_tdata_1d_arr  : flit_vector(num_router - 1 downto 0);
     signal a_axis_tstrb_1d_arr  : Std_logic_vector(num_router * (C_AXIS_TDATA_WIDTH/8) - 1 downto 0);
     signal a_axis_tlast_1d_arr  : Std_logic_vector(num_router - 1 downto 0);
     signal a_axis_tvalid_1d_arr : Std_logic_vector(num_router - 1 downto 0);
 
     signal b_axis_tready_1d_arr : Std_logic_vector(num_router - 1 downto 0);
-    signal b_axis_tdata_1d_arr  : Std_logic_vector(num_router * C_AXIS_TDATA_WIDTH - 1 downto 0);
+    signal b_axis_tdata_1d_arr  : flit_vector(num_router - 1 downto 0);
     signal b_axis_tstrb_1d_arr  : Std_logic_vector(num_router * (C_AXIS_TDATA_WIDTH/8) - 1 downto 0);
     signal b_axis_tlast_1d_arr  : Std_logic_vector(num_router - 1 downto 0);
     signal b_axis_tvalid_1d_arr : Std_logic_vector(num_router - 1 downto 0);
@@ -58,13 +58,13 @@ begin
     -- I/O connection
     s_axis_tready <= a_axis_tready_1d_arr(0);
     m_axis_tvalid <= b_axis_tvalid_1d_arr(0);
-    m_axis_tdata  <= b_axis_tdata_1d_arr(C_AXIS_TDATA_WIDTH * (0 + 1) - 1 downto C_AXIS_TDATA_WIDTH * 0);
+    m_axis_tdata  <= b_axis_tdata_1d_arr(0);
     m_axis_tstrb  <= b_axis_tstrb_1d_arr((C_AXIS_TDATA_WIDTH/8) * (0 + 1) - 1 downto (C_AXIS_TDATA_WIDTH/8) * 0);
     m_axis_tlast  <= b_axis_tlast_1d_arr(0);
 
     b_axis_tready_1d_arr(0)                                                                     <= m_axis_tready;
     a_axis_tvalid_1d_arr(0)                                                                     <= s_axis_tvalid;
-    a_axis_tdata_1d_arr(C_AXIS_TDATA_WIDTH * (0 + 1) - 1 downto C_AXIS_TDATA_WIDTH * 0)         <= s_axis_tdata;
+    a_axis_tdata_1d_arr(0)                                                                      <= s_axis_tdata;
     a_axis_tstrb_1d_arr((C_AXIS_TDATA_WIDTH/8) * (0 + 1) - 1 downto (C_AXIS_TDATA_WIDTH/8) * 0) <= s_axis_tstrb;
     a_axis_tlast_1d_arr(0)                                                                      <= s_axis_tlast;
 
@@ -92,7 +92,7 @@ begin
                 S_AXIS_ACLK    => clk,
                 S_AXIS_ARESETN => rst,
                 S_AXIS_TREADY  => a_axis_tready_1d_arr(i),
-                S_AXIS_TDATA   => a_axis_tdata_1d_arr(flit_size * (i + 1) - 1 downto flit_size * i),
+                S_AXIS_TDATA   => a_axis_tdata_1d_arr(i),
                 S_AXIS_TSTRB   => a_axis_tstrb_1d_arr((flit_size/8) * (i + 1) - 1 downto (flit_size/8) * i),
                 S_AXIS_TLAST   => a_axis_tlast_1d_arr(i),
                 S_AXIS_TVALID  => a_axis_tvalid_1d_arr(i)
@@ -118,7 +118,7 @@ begin
                 M_AXIS_ACLK    => clk,
                 M_AXIS_ARESETN => rst,
                 M_AXIS_TREADY  => b_axis_tready_1d_arr(i),
-                M_AXIS_TDATA   => b_axis_tdata_1d_arr(flit_size * (i + 1) - 1 downto flit_size * i),
+                M_AXIS_TDATA   => b_axis_tdata_1d_arr(i),
                 M_AXIS_TSTRB   => b_axis_tstrb_1d_arr((flit_size/8) * (i + 1) - 1 downto (flit_size/8) * i),
                 M_AXIS_TLAST   => b_axis_tlast_1d_arr(i),
                 M_AXIS_TVALID  => b_axis_tvalid_1d_arr(i)
@@ -135,13 +135,13 @@ begin
                 rst => rst,
 
                 S_AXIS_TREADY => b_axis_tready_1d_arr(i),
-                S_AXIS_TDATA  => b_axis_tdata_1d_arr(flit_size * (i + 1) - 1 downto flit_size * i),
+                S_AXIS_TDATA  => b_axis_tdata_1d_arr(i),
                 S_AXIS_TSTRB  => b_axis_tstrb_1d_arr((flit_size/8) * (i + 1) - 1 downto (flit_size/8) * i),
                 S_AXIS_TLAST  => b_axis_tlast_1d_arr(i),
                 S_AXIS_TVALID => b_axis_tvalid_1d_arr(i),
 
                 M_AXIS_TREADY => a_axis_tready_1d_arr(i),
-                M_AXIS_TDATA  => a_axis_tdata_1d_arr(flit_size * (i + 1) - 1 downto flit_size * i),
+                M_AXIS_TDATA  => a_axis_tdata_1d_arr(i),
                 M_AXIS_TSTRB  => a_axis_tstrb_1d_arr((flit_size/8) * (i + 1) - 1 downto (flit_size/8) * i),
                 M_AXIS_TLAST  => a_axis_tlast_1d_arr(i),
                 M_AXIS_TVALID => a_axis_tvalid_1d_arr(i)
