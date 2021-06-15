@@ -30,8 +30,6 @@ from PIL import Image
 # *********************************** Define functions
 
 
-
-
 # Define flit division
 
 def data2flit(s, n):
@@ -66,17 +64,21 @@ output_inj_time_file = "in/injection_time.txt"  # Injection time in C.C
 output_data_header_file = "in/data_header.txt"
 output_packet_header_length = "in/packet_header_length.txt"
 header_included = True  # header_included in the packet structure
-max_x_dim = 4  # starting from 1 //  Must be the same in both files + VHDL files
-max_y_dim = 4  # starting from 1 //  Must be the same in both files + VHDL files
+max_x_dim = 2  # starting from 1 //  Must be the same in both files + VHDL files
+max_y_dim = 1  # starting from 1 //  Must be the same in both files + VHDL files
 max_z_dim = 1  # starting from 1 //  Must be the same in both files + VHDL files
 flit_width = 32  # Must be the same in both files + VHDL files
 # (number of flits + header_included) in a packet //  Must be the same in both files + VHDL files
 max_packet_len = 31
-src_address = (int(sys.argv[1]), int(sys.argv[2]), int(sys.argv[3]))  # Z Y X  //   starting from 0
-dest_address = (int(sys.argv[4]), int(sys.argv[5]), int(sys.argv[6]))  # Z Y X   //  starting from 0
-lower_range_packet_length = 3  # Lower range of packet_length for random function
-upper_range_packet_length = 3  # Upper range of packet_length for random function
-mu, sigma = 30, 5  # Mean and Standard deviation for the injection time
+# src_address = (int(sys.argv[1]), int(sys.argv[2]), int(
+#     sys.argv[3]))  # Z Y X  //   starting from 0
+# dest_address = (int(sys.argv[4]), int(sys.argv[5]), int(
+#     sys.argv[6]))  # Z Y X   //  starting from 0
+src_address = (0, 0, 0)
+dest_address = (0, 0, 1)
+lower_range_packet_length = 1  # Lower range of packet_length for random function
+upper_range_packet_length = 30  # Upper range of packet_length for random function
+mu, sigma = 0, 0  # Mean and Standard deviation for the injection time
 
 
 print(__file__, src_address, "->", dest_address)
@@ -146,7 +148,6 @@ for j in data2flit(data_flits, flit_width):
     data_save += str(j) + "\n"
 
 
-
 with open(output_file, "w") as handle:
     handle.write(data_save)
     handle.close()
@@ -189,7 +190,6 @@ for inj_time in range(packet_line_counter):
         random_inj_time = random_inj_time + lower_range_packet_length + 1
     final_inj_time = final_inj_time + random_inj_time
     data_inj_time += str(final_inj_time) + "\n"
-
 
 
 g = open(output_inj_time_file, 'w')
@@ -290,12 +290,21 @@ for x in range(0, len(packet_length)):
             data2save += str(input_data[data_line_counter])
         data_line_counter = data_line_counter + 1
 
+    # print(packet_id, packet_id_width)
+    # print(src_address)
+    # print(dest_address)
+    # print(packet_length[packet_length_line_counter])
+    # print(int2binary(int(packet_length[packet_length_line_counter]) +
+    #                  int(header_included) + header_num - 1, packet_length_width))
+    # print(header_flit)
+
+    # if x == 4:
+    #     exit(0)
 
 
 f = open(output_data_header_file, 'w')
 f.write(data2save)
 f.close()
-
 
 
 f = open(output_packet_header_length, 'w')
