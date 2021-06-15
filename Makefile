@@ -1,16 +1,15 @@
 # test name
-TEST_NAME:=full_noc
+TEST_NAME:=top_tb
 VHDL_EX:=vhd
-STOP_TIME:=100us
+STOP_TIME:=1000ns
 
-# compiler settings
+# compiler settings  --ieee=[synopsys none standard mentor]  --warn-no-vital-generic --std=08
 GHDL_CMD:=ghdl
-GHDL_FLAGS:=--ieee=synopsys --warn-no-vital-generic
-# --std=08
+GHDL_FLAGS:= --warn-no-vital-generic --std=08
 
 # directories
 TESTBENCH_DIR:=./testbench
-SOURCE_DIR:=./full_noc
+SOURCE_DIR:=./source
 WORK_DIR:=./ghdlwork
 
 # files
@@ -40,7 +39,20 @@ clean:
 	rm -f *.vcd *.txt
 	rm -rf $(WORK_DIR)/*.cf
 	rm -rf ./data/gen_rec/out/*
+	rm -rf ./data/pic/out/*
 
 
 tree:
 	$(GHDL_CMD) -r $(GHDL_FLAGS) --workdir=$(WORK_DIR) --work=work $(TEST_NAME) --disp-tree --no-run > tree.txt
+
+
+install:
+	git clone https://github.com/ghdl/ghdl.git
+	cd ghdl
+	sudo apt install gnat
+	./configure --prefix=/usr/local
+	make
+	make install
+	cd ..
+# sudo rm -rf ghdl
+
