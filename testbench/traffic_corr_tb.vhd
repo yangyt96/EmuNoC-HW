@@ -26,14 +26,14 @@ end entity;
 architecture behave of traffic_corr_tb is
 
 	constant cnt_flit_width          : Positive := flit_size;
-	constant cnt_router_credit       : Integer  := 4;
+	constant cnt_router_credit       : Integer  := 2;
 	constant cnt_srl_fifo_depth      : Integer  := 200;
-	constant cnt_rec_time_text       : String   := "data/pic/out/receive_time_noc.txt";    -- w
-	constant cnt_rec_data_text       : String   := "data/pic/out/receive_data_noc.txt";    -- w
-	constant cnt_inj_time_text       : String   := "data/pic/in/injection_time.txt";       -- r
-	constant cnt_packet_length_text  : String   := "data/pic/in/packet_header_length.txt"; -- r
-	constant cnt_image_2_flits_text  : String   := "data/pic/in/data_header.txt";          -- r
-	constant cnt_inj_time_2_noc_text : String   := "data/pic/out/inj_time_2_noc.txt";      -- w
+	constant cnt_rec_time_text       : String   := "testdata/pic/out/receive_time_noc.txt";    -- w
+	constant cnt_rec_data_text       : String   := "testdata/pic/out/receive_data_noc.txt";    -- w
+	constant cnt_inj_time_text       : String   := "testdata/pic/in/injection_time.txt";       -- r
+	constant cnt_packet_length_text  : String   := "testdata/pic/in/packet_header_length.txt"; -- r
+	constant cnt_image_2_flits_text  : String   := "testdata/pic/in/data_header.txt";          -- r
+	constant cnt_inj_time_2_noc_text : String   := "testdata/pic/out/inj_time_2_noc.txt";      -- w
 
 	-------------------------------------------------------------------
 

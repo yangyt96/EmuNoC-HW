@@ -69,8 +69,8 @@ begin
     inst_s_axi_traffic_rec : entity work.S_AXIS_TRAFFIC_REC
         generic map(
             C_S_AXIS_TDATA_WIDTH => flit_size,
-            rec_time_text        => "data/m_axis_ni_tb/out/rec_time_text.txt",
-            rec_data_text        => "data/m_axis_ni_tb/out/rec_data_text.txt"
+            rec_time_text        => "testdata/m_axis_ni_tb/out/rec_time_text.txt",
+            rec_data_text        => "testdata/m_axis_ni_tb/out/rec_data_text.txt"
         )
         port map(
             S_AXIS_ACLK    => clk,

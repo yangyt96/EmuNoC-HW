@@ -26,12 +26,12 @@ end entity;
 architecture behave of traffic_gen_tb is
 
 	constant cnt_flit_width          : Positive                                      := flit_size;
-	constant cnt_router_credit       : Integer                                       := 2;
+	constant cnt_router_credit       : Integer                                       := 0;
 	constant cnt_srl_fifo_depth      : Integer                                       := 32;
-	constant cnt_inj_time_text       : String                                        := "data/gen_rec/in/injection_time.txt";
-	constant cnt_packet_length_text  : String                                        := "data/gen_rec/in/packet_length.txt";
-	constant cnt_image_2_flits_text  : String                                        := "data/gen_rec/in/data_header.txt";
-	constant cnt_inj_time_2_noc_text : String                                        := "data/gen_rec/out/inj_time_2_noc.txt";
+	constant cnt_inj_time_text       : String                                        := "testdata/gen_rec/in/injection_time.txt";
+	constant cnt_packet_length_text  : String                                        := "testdata/gen_rec/in/packet_length.txt";
+	constant cnt_image_2_flits_text  : String                                        := "testdata/gen_rec/in/data_header.txt";
+	constant cnt_inj_time_2_noc_text : String                                        := "testdata/gen_rec/out/inj_time_2_noc.txt";
 	signal clk, rst, valid, incr     : Std_logic                                     := '0';
 	signal data_out                  : Std_logic_vector(cnt_flit_width - 1 downto 0) := (others => '0');
 	signal counter                   : Natural                                       := 0;
@@ -105,7 +105,7 @@ begin
 	T1 : process
 	begin
 		incr <= '0';
-		wait for (clk_period * 30);
+		wait for (clk_period * 50);
 		incr <= '1';
 		wait for (clk_period * 1);
 	end process;

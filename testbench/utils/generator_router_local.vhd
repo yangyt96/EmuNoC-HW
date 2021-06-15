@@ -83,10 +83,10 @@ begin
                 flit_width          => flit_size,
                 router_credit       => vc_depth_array(i)(0),
                 srl_fifo_depth      => 200,
-                inj_time_text       => "data/m_axis_ni_tb/in/" & Integer'image(i) & "/inj_time.txt",  -- r
-                packet_length_text  => "data/m_axis_ni_tb/in/" & Integer'image(i) & "/pkt_len.txt",   -- r
-                image_2_flits_text  => "data/m_axis_ni_tb/in/" & Integer'image(i) & "/flit_data.txt", -- r
-                inj_time_2_noc_text => "data/m_axis_ni_tb/out/" & Integer'image(i) & "/inj_time.txt"  -- w
+                inj_time_text       => "testdata/m_axis_ni_tb/in/" & Integer'image(i) & "/inj_time.txt",  -- r
+                packet_length_text  => "testdata/m_axis_ni_tb/in/" & Integer'image(i) & "/pkt_len.txt",   -- r
+                image_2_flits_text  => "testdata/m_axis_ni_tb/in/" & Integer'image(i) & "/flit_data.txt", -- r
+                inj_time_2_noc_text => "testdata/m_axis_ni_tb/out/" & Integer'image(i) & "/inj_time.txt"  -- w
             )
             port map(
                 clk      => clk,

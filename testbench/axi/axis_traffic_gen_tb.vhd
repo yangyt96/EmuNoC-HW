@@ -16,10 +16,10 @@ architecture behave of axis_traffic_gen_tb is
 	constant cnt_flit_width          : Positive := flit_size;
 	constant cnt_router_credit       : Integer  := 1;
 	constant cnt_srl_fifo_depth      : Integer  := 5;
-	constant cnt_inj_time_text       : String   := "data/gen_rec/in/injection_time.txt";
-	constant cnt_packet_length_text  : String   := "data/gen_rec/in/packet_length.txt";
-	constant cnt_image_2_flits_text  : String   := "data/gen_rec/in/data_header.txt";
-	constant cnt_inj_time_2_noc_text : String   := "data/gen_rec/out/inj_time_2_noc.txt";
+	constant cnt_inj_time_text       : String   := "testdata/gen_rec/in/injection_time.txt";
+	constant cnt_packet_length_text  : String   := "testdata/gen_rec/in/packet_length.txt";
+	constant cnt_image_2_flits_text  : String   := "testdata/gen_rec/in/data_header.txt";
+	constant cnt_inj_time_2_noc_text : String   := "testdata/gen_rec/out/inj_time_2_noc.txt";
 
 	constant C_M_AXIS_TDATA_WIDTH : Integer := 32;
 

@@ -38,8 +38,8 @@ view:
 clean:
 	rm -f *.vcd *.txt
 	rm -rf $(WORK_DIR)/*.cf
-	rm -rf ./data/gen_rec/out/*
-	rm -rf ./data/pic/out/*
+	rm -rf ./testdata/gen_rec/out/*
+	rm -rf ./testdata/pic/out/*
 
 
 tree:
@@ -55,4 +55,3 @@ install:
 	make install
 	cd ..
 # sudo rm -rf ghdl
-

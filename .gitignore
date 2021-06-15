@@ -1,2 +1,15 @@
+# compiled files
 *.vcd
-ghdlwork
+ghdlwork/*
+
+# source codes
+source/full*
+*bkp
+clz
+
+# test data
+testdata/gen_rec
+testdata/pic/in
+testdata/pic/out
+testdata/m_axis_ni_tb/in
+testdata/m_axis_ni_tb/out
