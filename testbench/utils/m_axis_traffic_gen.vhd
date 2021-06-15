@@ -77,9 +77,11 @@ begin
 
             readline(packet_length, input_line);
             read(input_line, next_data_packet_length);
+            -- report "next_data_packet_length: " & Integer'image(next_data_packet_length);
 
             readline(inj_time, input_line);
             read(input_line, next_inj_time);
+            -- report "next_inj_time: " & Integer'image(next_inj_time);
 
             wait until (counter >= next_inj_time - 1) and rising_edge(M_AXIS_ACLK);
 
@@ -90,6 +92,7 @@ begin
                 write_en <= '1';
                 wait until rising_edge(M_AXIS_ACLK) and write_valid = '1';
             end loop;
+            write_en <= '0';
         end loop;
     end process;
 

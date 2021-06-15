@@ -33,7 +33,7 @@ begin
         '0';
 
     -----------------------------
-    ---- Pressure signal test----
+    ---- Signal pressure test----
     -----------------------------
     -- S_AXIS_TREADY <= '1' when rec_incr = '1' and S_AXIS_TVALID = '1' and rand = 0 else
     --     '0';
