@@ -26,7 +26,7 @@ end entity;
 architecture behave of traffic_gen_tb is
 
 	constant cnt_flit_width          : Positive                                      := flit_size;
-	constant cnt_router_credit       : Integer                                       := 0;
+	constant cnt_router_credit       : Integer                                       := 2;
 	constant cnt_srl_fifo_depth      : Integer                                       := 32;
 	constant cnt_inj_time_text       : String                                        := "testdata/gen_rec/in/injection_time.txt";
 	constant cnt_packet_length_text  : String                                        := "testdata/gen_rec/in/packet_length.txt";
