@@ -15,23 +15,17 @@ architecture behave of top_tb is
 
     constant cnt_flit_width          : Positive := flit_size;
     constant cnt_srl_fifo_depth      : Integer  := 16;
-    constant cnt_rec_time_text       : String   := "testdata/pic/out/receive_time_noc.txt";    -- w
-    constant cnt_rec_data_text       : String   := "testdata/pic/out/receive_data_noc.txt";    -- w
-    constant cnt_inj_time_text       : String   := "testdata/pic/in/injection_time.txt";       -- r
-    constant cnt_packet_length_text  : String   := "testdata/pic/in/packet_header_length.txt"; -- r
-    constant cnt_image_2_flits_text  : String   := "testdata/pic/in/data_header.txt";          -- r
-    constant cnt_inj_time_2_noc_text : String   := "testdata/pic/out/inj_time_2_noc.txt";      -- w
+    constant cnt_inj_time_text       : String   := "testdata/gen_rec/in/inj_time.txt";   -- r
+    constant cnt_packet_length_text  : String   := "testdata/gen_rec/in/pkt_len.txt";    -- r
+    constant cnt_image_2_flits_text  : String   := "testdata/gen_rec/in/flit_data.txt";  -- r
+    constant cnt_rec_time_text       : String   := "testdata/gen_rec/out/recv_time.txt"; -- w
+    constant cnt_rec_data_text       : String   := "testdata/gen_rec/out/recv_flit.txt"; -- w
+    constant cnt_inj_time_2_noc_text : String   := "testdata/gen_rec/out/inj_time.txt";  -- w
 
     -------------------------------------------------------------------
 
-    signal clk               : Std_logic                             := '0';
-    signal rst               : Std_logic                             := RST_LVL;
-    signal local_rx          : flit_vector(num_router - 1 downto 0)  := (others => (others => '0'));
-    signal local_vc_write_rx : Std_logic_vector(num_io - 1 downto 0) := (others => '0');
-    signal local_incr_rx_vec : Std_logic_vector(num_io - 1 downto 0) := (others => '0');
-    signal local_tx          : flit_vector(num_router - 1 downto 0);
-    signal local_vc_write_tx : Std_logic_vector(num_io - 1 downto 0);
-    signal local_incr_tx_vec : Std_logic_vector(num_io - 1 downto 0);
+    signal clk : Std_logic := '0';
+    signal rst : Std_logic := RST_LVL;
 
     signal rec_axis_tvalid : Std_logic;
     signal rec_axis_tdata  : Std_logic_vector(cnt_flit_width - 1 downto 0);
