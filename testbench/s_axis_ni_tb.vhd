@@ -18,12 +18,12 @@ architecture behave of s_axis_ni_tb is
 
     constant cnt_flit_width          : Positive := flit_size;
     constant cnt_srl_fifo_depth      : Integer  := 16;
-    constant cnt_inj_time_text       : String   := "testdata/pic/in/injection_time.txt";       -- r
-    constant cnt_packet_length_text  : String   := "testdata/pic/in/packet_header_length.txt"; -- r
-    constant cnt_image_2_flits_text  : String   := "testdata/pic/in/data_header.txt";          -- r
-    constant cnt_rec_time_text       : String   := "testdata/pic/out/receive_time_noc.txt";    -- w
-    constant cnt_rec_data_text       : String   := "testdata/pic/out/receive_data_noc.txt";    -- w
-    constant cnt_inj_time_2_noc_text : String   := "testdata/pic/out/inj_time_2_noc.txt";      -- w
+    constant cnt_inj_time_text       : String   := "testdata/s_axis_ni_tb/in/inj_time.txt";   -- r
+    constant cnt_packet_length_text  : String   := "testdata/s_axis_ni_tb/in/pkt_len.txt";    -- r
+    constant cnt_image_2_flits_text  : String   := "testdata/s_axis_ni_tb/in/flit_data.txt";  -- r
+    constant cnt_rec_time_text       : String   := "testdata/s_axis_ni_tb/out/recv_time.txt"; -- w
+    constant cnt_rec_data_text       : String   := "testdata/s_axis_ni_tb/out/recv_data.txt"; -- w
+    constant cnt_inj_time_2_noc_text : String   := "testdata/s_axis_ni_tb/out/inj_time.txt";  -- w
 
     -- System
     signal clk     : Std_logic := '0';
@@ -50,10 +50,26 @@ begin
 
     fifo_data_in  <= local_write;
     fifo_write_en <= or_reduce(local_write);
-    fifo_read_en  <= '1' when fifo_read_valid = '1' and clk_cnt mod 3 /= 0 else
-        '0';
+
     local_incr <= fifo_data_out when fifo_read_en = '1' else
         (others => '0');
+
+    process (clk, rst)
+    begin
+        if rst = RST_LVL then
+            fifo_read_en <= '0';
+        elsif rising_edge(clk) then
+
+            if 0 < clk_cnt and clk_cnt < 100 then
+                fifo_read_en <= fifo_read_valid;
+            elsif 100 < clk_cnt and clk_cnt < 200 then
+                fifo_read_en <= '1' when fifo_read_valid = '1' and clk_cnt mod 3 = 0 else
+                    '0';
+            else
+                fifo_read_en <= fifo_read_valid;
+            end if;
+        end if;
+    end process;
 
     -- component
     inst_ni_slave : entity work.s_axis_ni
