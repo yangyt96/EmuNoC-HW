@@ -19,3 +19,8 @@ make TEST_NAME=m_axis_ni_tb
 ```
 make view TEST_NAME=m_axis_ni_tb
 ```
+
+## Main test name
+- m_axis_ni_tb
+- s_axis_ni_tb
+- top_tb
