@@ -10,7 +10,7 @@ entity m_axis_ni_tb is
     generic (
         DATA_WIDTH   : Integer := 32;
         VC_NUM       : Integer := 2;
-        BUFFER_DEPTH : Integer := 32
+        BUFFER_DEPTH : Integer := 2
     );
 end entity;
 
@@ -29,9 +29,13 @@ architecture behave of m_axis_ni_tb is
     signal local_flit  : Std_logic_vector(DATA_WIDTH - 1 downto 0);
     signal local_write : Std_logic_vector(VC_NUM - 1 downto 0);
     signal local_incr  : Std_logic_vector(VC_NUM - 1 downto 0);
+
 begin
 
     inst_generator : entity work.generator_router_local
+        generic map(
+            vc_depth_out_array => ((BUFFER_DEPTH, BUFFER_DEPTH), (2, 2), (2, 2), (2, 2), (2, 2))
+        )
         port map(
             clk => clk,
             rst => rst,
