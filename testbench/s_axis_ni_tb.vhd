@@ -45,7 +45,6 @@ architecture behave of s_axis_ni_tb is
     signal fifo_read_en    : Std_logic;
     signal fifo_data_out   : Std_logic_vector(VC_NUM - 1 downto 0);
     signal fifo_read_valid : Std_logic;
-
 begin
 
     fifo_data_in  <= local_write;
@@ -63,8 +62,11 @@ begin
             if 0 < clk_cnt and clk_cnt < 100 then
                 fifo_read_en <= fifo_read_valid;
             elsif 100 < clk_cnt and clk_cnt < 200 then
-                fifo_read_en <= '1' when fifo_read_valid = '1' and clk_cnt mod 3 = 0 else
+                fifo_read_en <= '1' when (fifo_read_valid = '1' and clk_cnt mod 3 = 0) else
                     '0';
+            elsif 400 < clk_cnt and clk_cnt < 450 then
+                -- create zero credit condition
+                fifo_read_en <= '0';
             else
                 fifo_read_en <= fifo_read_valid;
             end if;

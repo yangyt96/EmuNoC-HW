@@ -126,14 +126,21 @@ if __name__ == "__main__":
 
     td = TestData()
 
+    # single test for long packet
     td.add(create_sim_data(start_time=0,
            pkt_len=max_pkt_len, src=0, dst=3))
 
+    # single test for smaller packet
     td.add(create_sim_data(start_time=100,
            pkt_len=max_pkt_len//2, src=0, dst=2))
 
+    # continuously multiple small packet injection
     for itr in range(4):
         td.add(create_sim_data(start_time=300,
                                pkt_len=2, src=0, dst=1))
+
+    for itr in range(10):
+        td.add(create_sim_data(start_time=400,
+                               pkt_len=1, src=0, dst=1))
 
     td.to_txt("in")
