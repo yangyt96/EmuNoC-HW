@@ -70,10 +70,10 @@ architecture arch_imp of S_AXIS_NI is
     signal credit  : Integer                      := 0;
     signal credits : INT_ARR(VC_NUM - 1 downto 0) := (others => ROUTER_CREDIT);
 
+    signal taddr                      : Integer range 0 to VC_NUM - 1;
     signal taddr_to_local_vc_write_rx : Std_logic_vector(VC_NUM - 1 downto 0);
 
     signal axis_tready : Std_logic;
-    signal vc_addr     : Integer range 0 to VC_NUM - 1;
 
 begin
     -- I/O Connections assignments
@@ -83,12 +83,12 @@ begin
         (others => '0');
 
     -- Internal
-    taddr_to_local_vc_write_rx <= Std_logic_vector(shift_left(to_unsigned(1, VC_NUM), vc_addr));
+    taddr_to_local_vc_write_rx <= Std_logic_vector(shift_left(to_unsigned(1, VC_NUM), taddr));
 
     axis_tready <= '1' when state = s_WORK and credit > 0 and S_AXIS_TVALID = '1' else
         '0';
 
-    credit <= credits(vc_addr mod VC_NUM);
+    credit <= credits(taddr);
 
     -- fsm
     process (S_AXIS_ACLK, S_AXIS_ARESETN)
@@ -103,7 +103,9 @@ begin
                     end if;
 
                 when s_INIT =>
-                    state <= s_WORK;
+                    if S_AXIS_TVALID = '1' then
+                        state <= s_WORK;
+                    end if;
 
                 when s_WORK =>
                     if axis_tready = '1' and S_AXIS_TVALID = '1' and S_AXIS_TLAST = '1' then
@@ -121,10 +123,10 @@ begin
     process (S_AXIS_ACLK, S_AXIS_ARESETN)
     begin
         if S_AXIS_ARESETN = RST_LVL then
-            vc_addr <= 0;
+            taddr <= 0;
         elsif rising_edge(S_AXIS_ACLK) then
             if state = s_WDONE then
-                vc_addr <= (vc_addr + 1) mod VC_NUM;
+                taddr <= (taddr + 1) mod VC_NUM;
             end if;
         end if;
     end process;
