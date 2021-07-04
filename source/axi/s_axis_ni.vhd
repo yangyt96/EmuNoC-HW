@@ -60,7 +60,6 @@ architecture arch_imp of S_AXIS_NI is
     type INT_ARR is array (Integer range <>) of Integer;
     type t_STATE is (
         s_IDLE,
-        s_INIT,
         s_WORK,
         s_WDONE
     );
@@ -98,11 +97,6 @@ begin
         elsif rising_edge(S_AXIS_ACLK) then
             case state is
                 when s_IDLE =>
-                    if S_AXIS_TVALID = '1' then
-                        state <= s_INIT;
-                    end if;
-
-                when s_INIT =>
                     if S_AXIS_TVALID = '1' then
                         state <= s_WORK;
                     end if;
