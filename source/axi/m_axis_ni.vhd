@@ -33,7 +33,7 @@ entity M_AXIS_NI is
         VC_NUM               : Integer := 2;
         BUFFER_DEPTH         : Integer := 32;
 
-        RST_LVL : Std_logic := RST_LVL -- NOC_3D_PKG
+        RST_LVL : Std_logic := '0'
     );
     port (
         -- NoC router local port
@@ -68,10 +68,11 @@ architecture implementation of M_AXIS_NI is
     signal fifo_read_valid : Std_logic_vector(VC_NUM - 1 downto 0);
     signal fifo_data_out   : flit_vector(VC_NUM - 1 downto 0);
 
-    signal incr_vc        : Std_logic_vector(VC_NUM - 1 downto 0);
-    signal incr_vc_addr   : Integer range 0 to VC_NUM - 1;
-    signal incr_vc_cyclic : Std_logic_vector(VC_NUM - 1 downto 0);
-    signal incr_vc_flag   : Std_logic;
+    signal taddr     : Integer range 0 to VC_NUM - 1;
+    signal init_flag : Std_logic;
+
+    signal shift_vc  : Std_logic_vector(VC_NUM - 1 downto 0);
+    signal rotate_vc : Std_logic_vector(VC_NUM - 1 downto 0);
 
     signal clz_data  : Std_logic_vector(VC_NUM - 1 downto 0); -- this need to be reversed assigned
     signal clz_valid : Std_logic;
@@ -81,34 +82,33 @@ begin
     -- I/O connection
     o_local_incr_tx_vec <= fifo_read_en;
 
-    M_AXIS_TVALID <= '1' when state = s_WORK and fifo_read_valid(incr_vc_addr) = '1' and tlast_counter > 0 else
+    M_AXIS_TVALID <= '1' when state = s_WORK and fifo_read_valid(taddr) = '1' and tlast_counter > 0 else
         '0';
-    M_AXIS_TDATA <= fifo_data_out(incr_vc_addr);
+    M_AXIS_TDATA <= fifo_data_out(taddr);
     M_AXIS_TSTRB <= (others => '1');
     M_AXIS_TLAST <= '1' when tlast_counter = 1 else
         '0';
 
     -- Internal signal
-    fifo_read_en <= incr_vc when state = s_WORK and fifo_read_valid(incr_vc_addr) = '1' and tlast_counter > 0 and M_AXIS_TREADY = '1' else
+    fifo_read_en <= shift_vc when state = s_WORK and fifo_read_valid(taddr) = '1' and tlast_counter > 0 and M_AXIS_TREADY = '1' else
         (others => '0');
 
-    incr_vc        <= Std_logic_vector(shift_left(to_unsigned(1, incr_vc'length), incr_vc_addr));
-    incr_vc_cyclic <= Std_logic_vector(rotate_right(unsigned(fifo_read_valid), incr_vc_addr));
+    shift_vc  <= Std_logic_vector(shift_left(to_unsigned(1, shift_vc'length), taddr));
+    rotate_vc <= Std_logic_vector(rotate_right(unsigned(fifo_read_valid), taddr));
 
     -- determine the vc addr
     process (M_AXIS_ACLK, M_AXIS_ARESETN)
     begin
         if M_AXIS_ARESETN = RST_LVL then
-            incr_vc_addr <= 0;
-            incr_vc_flag <= '0';
+            taddr     <= 0;
+            init_flag <= '0';
         elsif rising_edge(M_AXIS_ACLK) then
             if state = s_WDONE then
-                incr_vc_addr <= (incr_vc_addr + 1) mod VC_NUM;
-            elsif state = s_INIT and incr_vc_flag = '0' then
-                incr_vc_addr <= (incr_vc_addr + to_integer(unsigned(clz_count))) mod VC_NUM;
-                incr_vc_flag <= '1';
-            elsif state = s_WDONE then
-                incr_vc_flag <= '0';
+                taddr     <= (taddr + 1) mod VC_NUM;
+                init_flag <= '0';
+            elsif state = s_INIT and init_flag = '0' then
+                taddr     <= (taddr + to_integer(unsigned(clz_count))) mod VC_NUM;
+                init_flag <= '1';
             end if;
         end if;
     end process;
@@ -121,7 +121,7 @@ begin
         elsif rising_edge(M_AXIS_ACLK) then
             if state = s_IDLE and or_reduce(fifo_read_valid) = '1' then
                 for i in 0 to VC_NUM - 1 loop
-                    clz_data(i) <= incr_vc_cyclic(VC_NUM - 1 - i);
+                    clz_data(i) <= rotate_vc(VC_NUM - 1 - i);
                 end loop;
             end if;
         end if;
@@ -142,7 +142,7 @@ begin
                     end if;
 
                 when s_INIT =>
-                    if incr_vc_flag = '1' then
+                    if init_flag = '1' then
                         state <= s_IDONE;
                     end if;
 
@@ -167,8 +167,8 @@ begin
         if M_AXIS_ARESETN = RST_LVL then
             tlast_counter <= 0;
         elsif rising_edge(M_AXIS_ACLK) then
-            if state = s_INIT and incr_vc_flag = '1' then
-                tlast_counter <= to_integer(unsigned(get_header_inf(fifo_data_out(incr_vc_addr)).packet_length));
+            if state = s_INIT and init_flag = '1' then
+                tlast_counter <= to_integer(unsigned(get_header_inf(fifo_data_out(taddr)).packet_length));
             elsif state = s_WORK and or_reduce(fifo_read_en) = '1' then
                 tlast_counter <= tlast_counter - 1;
             end if;
