@@ -5,16 +5,19 @@ use ieee.std_logic_textio.all;
 
 use std.textio.all;
 use work.NOC_3D_PACKAGE.all;
-use work.TESTBENCH_PACKAGE.all;
+-- use work.TESTBENCH_PACKAGE.all;
 
 entity top_tb is
-
+    generic (
+        RST_LVL    : Std_logic := RST_LVL;
+        CLK_PERIOD : Time      := 1 ns
+    );
 end entity;
 
 architecture behave of top_tb is
 
     -- System
-    signal clk     : Std_logic := '0';
+    signal clk     : Std_logic := '1';
     signal rst     : Std_logic := RST_LVL;
     signal clk_cnt : Integer   := 0;
 
@@ -121,7 +124,7 @@ begin
     proc_rst : process
     begin
         rst <= RST_LVL;
-        wait for (clk_period * 2);
+        wait for (CLK_PERIOD * 2);
         rst <= not(RST_LVL);
         wait;
     end process;
