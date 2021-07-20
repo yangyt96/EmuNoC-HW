@@ -7,7 +7,7 @@ use ieee.std_logic_textio.all;
 
 use work.NOC_3D_PACKAGE.all;
 
-entity top_noc is
+entity top_noc_ni is
     generic (
         C_AXIS_TDATA_WIDTH : Integer := flit_size
     );
@@ -29,7 +29,7 @@ entity top_noc is
     );
 end entity;
 
-architecture behave of top_noc is
+architecture behave of top_noc_ni is
     type int_arr is array (Natural range <>) of Integer;
 
     constant num_router : Positive := max_x_dim * max_y_dim * max_z_dim;
