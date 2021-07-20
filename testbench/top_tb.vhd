@@ -13,6 +13,12 @@ end entity;
 
 architecture behave of top_tb is
 
+    -- System
+    signal clk     : Std_logic := '0';
+    signal rst     : Std_logic := RST_LVL;
+    signal clk_cnt : Integer   := 0;
+
+    -- Constants
     constant cnt_flit_width          : Positive := flit_size;
     constant cnt_srl_fifo_depth      : Integer  := 16;
     constant cnt_inj_time_text       : String   := "testdata/gen_rec/in/inj_time.txt";   -- r
@@ -23,9 +29,6 @@ architecture behave of top_tb is
     constant cnt_inj_time_2_noc_text : String   := "testdata/gen_rec/out/inj_time.txt";  -- w
 
     -------------------------------------------------------------------
-
-    signal clk : Std_logic := '0';
-    signal rst : Std_logic := RST_LVL;
 
     signal rec_axis_tvalid : Std_logic;
     signal rec_axis_tdata  : Std_logic_vector(cnt_flit_width - 1 downto 0);
@@ -41,9 +44,6 @@ architecture behave of top_tb is
     signal gen_axis_taddr  : Std_logic_vector(4 - 1 downto 0);
 
 begin
-
-    -------------------------------------------------------------------
-    ------------------- Component instantiations ----------------------
 
     -- gen Master
     inst_m_axis_traffic_gen : entity work.M_AXIS_TRAFFIC_GEN
@@ -67,7 +67,7 @@ begin
             M_AXIS_TREADY  => gen_axis_tready
         );
 
-    inst_top : entity work.top
+    DUT : entity work.top
         -- generic map(
         --     BUFFER_DEPTH => 1
         -- )
@@ -106,19 +106,24 @@ begin
             S_AXIS_TREADY  => rec_axis_tready
         );
 
-    -------------------------------------------------------------------
-    ----------------------RST & CLK generation-------------------------
+    -- System
+    clk <= not(clk) after clk_period/2;
 
-    rst_gen : process
+    proc_clk_cnt : process (clk, rst)
+    begin
+        if rst = RST_LVL then
+            clk_cnt <= 0;
+        elsif rising_edge(clk) then
+            clk_cnt <= clk_cnt + 1;
+        end if;
+    end process;
+
+    proc_rst : process
     begin
         rst <= RST_LVL;
         wait for (clk_period * 2);
         rst <= not(RST_LVL);
         wait;
     end process;
-
-    clk <= not(clk) after clk_period/2;
-    --------------------------------------------------------------------
-    -------------------------------------------------------------------
 
 end architecture;
