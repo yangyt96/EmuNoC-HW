@@ -16,9 +16,6 @@ WORK_DIR:=./ghdlwork
 SOURCE_FILES:=$(shell find $(SOURCE_DIR) -name '*.$(VHDL_EX)')
 TESTBENCH_FILES:=$(shell find $(TESTBENCH_DIR) -name '*.$(VHDL_EX)')
 
-# vcd file
-VCD_FILE:=$(TEST_NAME).vcd
-
 
 all:directory compile run
 
@@ -30,10 +27,10 @@ compile:
 	$(GHDL_CMD) -m $(GHDL_FLAGS) --workdir=$(WORK_DIR) --work=work $(TEST_NAME)
 
 run:
-	$(GHDL_CMD) -r $(GHDL_FLAGS) --workdir=$(WORK_DIR) --work=work $(TEST_NAME) --vcd=$(VCD_FILE) --ieee-asserts=disable --stop-time=$(STOP_TIME)
+	$(GHDL_CMD) -r $(GHDL_FLAGS) --workdir=$(WORK_DIR) --work=work $(TEST_NAME) --wave=$(TEST_NAME).ghw --ieee-asserts=disable --stop-time=$(STOP_TIME)
 
 view:
-	gtkwave $(VCD_FILE)
+	gtkwave $(TEST_NAME).ghw
 
 clean:
 	rm -f *.vcd *.txt
