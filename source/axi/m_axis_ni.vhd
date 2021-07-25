@@ -68,8 +68,7 @@ architecture implementation of M_AXIS_NI is
     signal fifos_read_valid : Std_logic_vector(VC_NUM - 1 downto 0);
     signal fifos_data_out   : flit_vector(VC_NUM - 1 downto 0);
 
-    signal taddr     : Integer range 0 to VC_NUM - 1;
-    signal init_flag : Std_logic;
+    signal taddr : Integer range 0 to VC_NUM - 1;
 
     signal shift_vc  : Std_logic_vector(VC_NUM - 1 downto 0);
     signal rotate_vc : Std_logic_vector(VC_NUM - 1 downto 0);
@@ -95,34 +94,34 @@ begin
 
     shift_vc  <= Std_logic_vector(shift_left(to_unsigned(1, shift_vc'length), taddr));
     rotate_vc <= Std_logic_vector(rotate_right(unsigned(fifos_read_valid), taddr));
+    gen_swap_endian : for i in 0 to VC_NUM - 1 generate
+        clz_data(i) <= rotate_vc(VC_NUM - 1 - i);
+    end generate;
 
     -- determine the vc addr
     process (M_AXIS_ACLK, M_AXIS_ARESETN)
     begin
         if M_AXIS_ARESETN = RST_LVL then
-            taddr     <= 0;
-            init_flag <= '0';
+            taddr <= 0;
         elsif rising_edge(M_AXIS_ACLK) then
             if state = s_WDONE then
-                taddr     <= (taddr + 1) mod VC_NUM;
-                init_flag <= '0';
-            elsif state = s_INIT and init_flag = '0' then
-                taddr     <= (taddr + to_integer(unsigned(clz_count))) mod VC_NUM;
-                init_flag <= '1';
+                taddr <= (taddr + 1) mod VC_NUM;
+            elsif state = s_IDLE and or_reduce(fifos_read_valid) = '1' then
+                taddr <= (taddr + to_integer(unsigned(clz_count))) mod VC_NUM;
             end if;
         end if;
     end process;
 
-    -- data input for clz
+    -- tlast counter
     process (M_AXIS_ACLK, M_AXIS_ARESETN)
     begin
         if M_AXIS_ARESETN = RST_LVL then
-            clz_data <= (others => '0');
+            tlast_counter <= 0;
         elsif rising_edge(M_AXIS_ACLK) then
-            if state = s_IDLE and or_reduce(fifos_read_valid) = '1' then
-                for i in 0 to VC_NUM - 1 loop
-                    clz_data(i) <= rotate_vc(VC_NUM - 1 - i);
-                end loop;
+            if state = s_INIT then
+                tlast_counter <= to_integer(unsigned(get_header_inf(fifos_data_out(taddr)).packet_length));
+            elsif state = s_WORK and or_reduce(fifos_read_en) = '1' then
+                tlast_counter <= tlast_counter - 1;
             end if;
         end if;
     end process;
@@ -142,9 +141,7 @@ begin
                     end if;
 
                 when s_INIT =>
-                    if init_flag = '1' then
-                        state <= s_IDONE;
-                    end if;
+                    state <= s_IDONE;
 
                 when s_IDONE =>
                     state <= s_WORK;
@@ -158,20 +155,6 @@ begin
                     state <= s_IDLE;
 
             end case;
-        end if;
-    end process;
-
-    -- tlast counter
-    process (M_AXIS_ACLK, M_AXIS_ARESETN)
-    begin
-        if M_AXIS_ARESETN = RST_LVL then
-            tlast_counter <= 0;
-        elsif rising_edge(M_AXIS_ACLK) then
-            if state = s_INIT and init_flag = '1' then
-                tlast_counter <= to_integer(unsigned(get_header_inf(fifos_data_out(taddr)).packet_length));
-            elsif state = s_WORK and or_reduce(fifos_read_en) = '1' then
-                tlast_counter <= tlast_counter - 1;
-            end if;
         end if;
     end process;
 
