@@ -99,17 +99,21 @@ begin
     inst_fifo : entity work.ring_fifo
         generic map(
             BUFFER_DEPTH => srl_fifo_depth,
-            DATA_WIDTH   => flit_size
+            DATA_WIDTH   => flit_size,
+            RST_LVL      => RST_LVL
         )
         port map(
-            clk         => M_AXIS_ACLK,
-            rst         => M_AXIS_ARESETN,
-            data_in     => data_in,
-            write_en    => write_en,
-            write_valid => write_valid,
-            data_out    => data_out,
-            read_en     => read_en,
-            read_valid  => read_valid
+            clk => M_AXIS_ACLK,
+            rst => M_AXIS_ARESETN,
+
+            i_wdata  => data_in,
+            i_wen    => write_en,
+            o_wvalid => write_valid,
+
+            o_rdata  => data_out,
+            i_ren    => read_en,
+            o_rvalid => read_valid
+
         );
 
     process (M_AXIS_ACLK, M_AXIS_ARESETN, read_valid)
