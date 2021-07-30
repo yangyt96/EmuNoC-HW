@@ -10,7 +10,7 @@ entity m_axis_ni_tb is
     generic (
         DATA_WIDTH   : Integer := 32;
         VC_NUM       : Integer := 2;
-        BUFFER_DEPTH : Integer := 2
+        BUFFER_DEPTH : Integer := max_packet_len + 1
     );
 end entity;
 
