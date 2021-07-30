@@ -31,7 +31,7 @@ entity M_AXIS_NI is
         C_M_AXIS_TDATA_WIDTH : Integer := 32;
         FLIT_SIZE            : Integer := 32;
         VC_NUM               : Integer := 2;
-        BUFFER_DEPTH         : Integer := 32;
+        BUFFER_DEPTH         : Integer := max_packet_len + 1;
 
         RST_LVL : Std_logic := '0'
     );
@@ -53,6 +53,10 @@ entity M_AXIS_NI is
 end M_AXIS_NI;
 
 architecture implementation of M_AXIS_NI is
+    -- Constants
+    constant CNT_WIDTH : Integer := bit_width(BUFFER_DEPTH + 1);
+
+    -- Data types
     type t_STATE is (
         s_IDLE,
         s_INIT,
@@ -60,18 +64,26 @@ architecture implementation of M_AXIS_NI is
         s_WORK,
         s_WDONE
     );
+    subtype t_PKT_LEN is unsigned(packet_len_width - 1 downto 0);
+    type t_PKT_LEN_1D_ARR is array (Natural range <>) of t_PKT_LEN;
+    subtype t_FIFO_CNT is Std_logic_vector(CNT_WIDTH - 1 downto 0);
+    type t_FIFO_CNT_1D_ARR is array (Natural range <>) of t_FIFO_CNT;
+
+    -- Signals
     signal state : t_STATE;
 
-    signal tlast_counter : Integer;
+    signal tlast_counter : Integer range 0 to max_packet_len;
 
     signal fifos_read_en    : Std_logic_vector(VC_NUM - 1 downto 0);
     signal fifos_read_valid : Std_logic_vector(VC_NUM - 1 downto 0);
     signal fifos_data_out   : flit_vector(VC_NUM - 1 downto 0);
+    signal fifos_count      : t_FIFO_CNT_1D_ARR(VC_NUM - 1 downto 0);
 
-    signal taddr : Integer range 0 to VC_NUM - 1;
+    signal pkts_len    : t_PKT_LEN_1D_ARR(VC_NUM - 1 downto 0);
+    signal pkts_arrive : Std_logic_vector(VC_NUM - 1 downto 0);
 
-    signal shift_vc  : Std_logic_vector(VC_NUM - 1 downto 0);
-    signal rotate_vc : Std_logic_vector(VC_NUM - 1 downto 0);
+    signal taddr    : Integer range 0 to VC_NUM - 1;
+    signal shift_vc : Std_logic_vector(VC_NUM - 1 downto 0);
 
     signal clz_data  : Std_logic_vector(VC_NUM - 1 downto 0); -- this need to be reversed assigned
     signal clz_valid : Std_logic;
@@ -91,23 +103,26 @@ begin
     -- Internal signal
     fifos_read_en <= shift_vc when state = s_WORK and fifos_read_valid(taddr) = '1' and tlast_counter > 0 and M_AXIS_TREADY = '1' else
         (others => '0');
+    shift_vc <= Std_logic_vector(shift_left(to_unsigned(1, shift_vc'length), taddr));
 
-    shift_vc  <= Std_logic_vector(shift_left(to_unsigned(1, shift_vc'length), taddr));
-    rotate_vc <= Std_logic_vector(rotate_right(unsigned(fifos_read_valid), taddr));
-    gen_swap_endian : for i in 0 to VC_NUM - 1 generate
-        clz_data(i) <= rotate_vc(VC_NUM - 1 - i);
+    gen_pkts_arrive : for i in 0 to VC_NUM - 1 generate
+        pkts_len(i)    <= unsigned(get_header_inf(fifos_data_out(i)).packet_length);
+        pkts_arrive(i) <= '1' when unsigned(fifos_count(i)) >= pkts_len(i) and fifos_read_valid(i) = '1' else
+        '0';
     end generate;
 
-    -- determine the vc addr
+    gen_swap_endian : for i in 0 to VC_NUM - 1 generate
+        clz_data(i) <= pkts_arrive(VC_NUM - 1 - i);
+    end generate;
+
+    -- determine the taddr
     process (M_AXIS_ACLK, M_AXIS_ARESETN)
     begin
         if M_AXIS_ARESETN = RST_LVL then
             taddr <= 0;
         elsif rising_edge(M_AXIS_ACLK) then
-            if state = s_WDONE then
-                taddr <= (taddr + 1) mod VC_NUM;
-            elsif state = s_IDLE and or_reduce(fifos_read_valid) = '1' then
-                taddr <= (taddr + to_integer(unsigned(clz_count))) mod VC_NUM;
+            if state = s_IDLE and or_reduce(pkts_arrive) = '1' then
+                taddr <= to_integer(unsigned(clz_count));
             end if;
         end if;
     end process;
@@ -136,7 +151,7 @@ begin
             case state is
 
                 when s_IDLE =>
-                    if or_reduce(fifos_read_valid) = '1' then
+                    if or_reduce(pkts_arrive) = '1' then
                         state <= s_INIT;
                     end if;
 
@@ -175,18 +190,21 @@ begin
             generic map(
                 BUFFER_DEPTH => BUFFER_DEPTH,
                 DATA_WIDTH   => FLIT_SIZE,
-                RST_LVL      => RST_LVL
+                RST_LVL      => RST_LVL,
+                CNT_WIDTH    => CNT_WIDTH
             )
             port map(
                 clk => M_AXIS_ACLK,
                 rst => M_AXIS_ARESETN,
 
-                data_in  => i_local_rx,
-                write_en => i_local_vc_write_rx(i),
+                count => fifos_count(i),
 
-                data_out   => fifos_data_out(i),
-                read_en    => fifos_read_en(i),
-                read_valid => fifos_read_valid(i)
+                i_wdata => i_local_rx,
+                i_wen   => i_local_vc_write_rx(i),
+
+                o_rdata  => fifos_data_out(i),
+                i_ren    => fifos_read_en(i),
+                o_rvalid => fifos_read_valid(i)
             );
     end generate;
 
