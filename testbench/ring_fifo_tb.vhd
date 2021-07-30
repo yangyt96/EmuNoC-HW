@@ -30,13 +30,13 @@ begin
             clk => clk,
             rst => rst,
 
-            data_in     => data_in,
-            write_en    => write_en,
-            write_valid => write_valid,
+            i_wdata  => data_in,
+            i_wen    => write_en,
+            o_wvalid => write_valid,
 
-            data_out   => data_out,
-            read_en    => read_en,
-            read_valid => read_valid
+            o_rdata  => data_out,
+            i_ren    => read_en,
+            o_rvalid => read_valid
 
         );
 

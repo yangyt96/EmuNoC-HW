@@ -130,12 +130,12 @@ begin
             clk => clk,
             rst => rst,
 
-            data_in  => fifo_data_in,
-            write_en => fifo_write_en,
+            i_wdata => fifo_data_in,
+            i_wen   => fifo_write_en,
 
-            read_en    => fifo_read_en,
-            data_out   => fifo_data_out,
-            read_valid => fifo_read_valid
+            i_ren    => fifo_read_en,
+            o_rdata  => fifo_data_out,
+            o_rvalid => fifo_read_valid
         );
 
     -- System
