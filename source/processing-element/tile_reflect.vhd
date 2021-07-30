@@ -228,13 +228,13 @@ begin
             clk => clk,
             rst => rst,
 
-            write_en    => fifo_write_en,
-            write_valid => fifo_write_valid,
-            data_in     => fifo_data_in,
+            i_wen    => fifo_write_en,
+            o_wvalid => fifo_write_valid,
+            i_wdata  => fifo_data_in,
 
-            read_en    => fifo_read_en,
-            read_valid => fifo_read_valid,
-            data_out   => fifo_data_out,
+            i_ren    => fifo_read_en,
+            o_rvalid => fifo_read_valid,
+            o_rdata  => fifo_data_out,
 
             count => fifo_count
         );
