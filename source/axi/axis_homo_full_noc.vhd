@@ -6,8 +6,8 @@ use work.NOC_3D_PACKAGE.all;
 
 entity axis_homo_full_noc is
     generic (
-        BUFFER_DEPTH  : Integer := 31;
-        ROUTER_CREDIT : Integer := 2;
+        BUFFER_DEPTH  : Integer := max_packet_len + 1;
+        ROUTER_CREDIT : Integer := max_vc_num;
         NUM_ROUTER    : Integer := max_x_dim * max_y_dim * max_z_dim;
         NUM_IO        : Integer := max_x_dim * max_y_dim * max_z_dim * max_vc_num;
 
@@ -55,7 +55,7 @@ begin
         );
 
     -- slave port
-    gen_slave : for i in 0 to NUM_ROUTER - 1 generate
+    gen_ni_slave : for i in 0 to NUM_ROUTER - 1 generate
         inst_slave : entity work.s_axis_ni
             generic map(
                 FLIT_SIZE     => flit_size,
@@ -83,7 +83,7 @@ begin
     end generate;
 
     -- master port
-    gen_master : for i in 0 to NUM_ROUTER - 1 generate
+    gen_ni_master : for i in 0 to NUM_ROUTER - 1 generate
         inst_master : entity work.m_axis_ni
             generic map(
                 FLIT_SIZE    => flit_size,
