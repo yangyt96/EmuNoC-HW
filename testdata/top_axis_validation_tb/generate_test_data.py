@@ -58,44 +58,19 @@ pkt_id = 0
 # Functions
 
 
-def create_packet(id, src, dst, pkt_len):
+def create_packet(src, dst, pkt_len):
+    global pkt_id
     pkt_data = ""
-    pkt_data += int_to_bin(id, flit_id_bit_width)
+    pkt_data += int_to_bin(pkt_id, flit_id_bit_width)
     pkt_data += int_to_bin(src, pe_bit_width)
     pkt_data += int_to_bin(dst, pe_bit_width)
     pkt_data += int_to_bin(pkt_len, flit_pkt_width)
 
     assert len(pkt_data) == flit_size, "len(pkt_data)={}, pkt_len:{}".format(
         len(pkt_data), pkt_len)
+
+    pkt_id += 1
     return pkt_data
-
-
-def create_random_sim_data(start_time: int, axis_len):
-
-    global pkt_id
-
-    ret = {}
-    ret["flit_data"] = []
-    for itr in range(axis_len):
-
-        src = randint(0, num_pe-1)
-        dst = randint(0, num_pe-1)
-        while src == dst:
-            dst = randint(0, num_pe-1)
-        pkt_len = randint(1, max_pkt_len)
-
-        ret["flit_data"].append(create_packet(
-            pkt_id, src=src, dst=dst, pkt_len=pkt_len))
-
-        print("id:", pkt_id, "src:", src, "dst:", dst,
-              "len:", pkt_len, ret["flit_data"][-1])
-
-        pkt_id += 1
-
-    ret["inj_time"] = [start_time]
-    ret["pkt_len"] = [axis_len]
-
-    return ret
 
 
 class TestData(dict):
@@ -128,15 +103,15 @@ class TestData(dict):
 def bin_to_info(binaries):
     assert (len(binaries) == flit_size), len(binaries)
     offset = 0
-    pkt_id = int(binaries[:flit_id_bit_width], 2)
+    tmp_id = int(binaries[:flit_id_bit_width], 2)
     offset = offset + flit_id_bit_width
-    src = int(binaries[offset:offset+pe_bit_width], 2)
+    tmp_src = int(binaries[offset:offset+pe_bit_width], 2)
     offset = offset + pe_bit_width
-    dst = int(binaries[offset:offset+pe_bit_width], 2)
+    tmp_dst = int(binaries[offset:offset+pe_bit_width], 2)
     offset = offset+pe_bit_width
-    dlen = int(binaries[offset:], 2)
+    tmp_len = int(binaries[offset:], 2)
 
-    return {"id": pkt_id, "src": src, "dst": dst, "len": dlen}
+    return {"id": tmp_id, "src": tmp_src, "dst": tmp_dst, "len": tmp_len}
 
 
 if __name__ == "__main__":
@@ -144,32 +119,25 @@ if __name__ == "__main__":
     """ Pressure test """
     td = TestData()
 
-    # data injection to all pe
+    # data injection all to all
     data = {}
-    data["flit_data"] = []
-    data["inj_time"] = [0]
+    time = 0
+    data["flit_data"] = [int_to_bin(time, flit_size)]
+    data["inj_time"] = [time]
 
-    pkt_id = 0
     for i in range(num_pe):
+        tmp = []
         for j in range(num_pe):
             if i == j:
                 continue
 
-            tmp = create_packet(pkt_id, i, j, 31)
-            data["flit_data"].append(tmp)
+            tmp.append(create_packet(i, j, 31))
 
-            pkt_id += 1
+        shuffle(tmp)
+        data["flit_data"].extend(tmp)
 
-    shuffle(data["flit_data"])
-    data["flit_data"].insert(0, int_to_bin(0, flit_size))
     data["pkt_len"] = [len(data["flit_data"])]
-
-    for i in data["flit_data"]:
-        print(i, bin_to_info(i))
-
     td.add(data)
-
-    print(len(data["flit_data"]))
 
     # run to inf
     data = {}

@@ -38,9 +38,9 @@ begin
 
     initiator : entity work.m_axis_sp_valid
         generic map(
-            inj_time_text      => "testdata/axis_validation/in/inj_time.txt",
-            packet_length_text => "testdata/axis_validation/in/pkt_len.txt",
-            image_2_flits_text => "testdata/axis_validation/in/flit_data.txt"
+            inj_time_text      => "testdata/top_axis_validation_tb/in/inj_time.txt",
+            packet_length_text => "testdata/top_axis_validation_tb/in/pkt_len.txt",
+            image_2_flits_text => "testdata/top_axis_validation_tb/in/flit_data.txt"
         )
         port map(
             clk => clk,
@@ -74,8 +74,8 @@ begin
     sink : entity work.S_AXIS_TRAFFIC_REC
         generic map(
             C_S_AXIS_TDATA_WIDTH => C_AXIS_TDATA_WIDTH,
-            rec_time_text        => "testdata/axis_validation/out/recv_time.txt",
-            rec_data_text        => "testdata/axis_validation/out/recv_flit.txt"
+            rec_time_text        => "testdata/top_axis_validation_tb/out/recv_time.txt",
+            rec_data_text        => "testdata/top_axis_validation_tb/out/recv_flit.txt"
         )
         port map(
             S_AXIS_ACLK    => clk,

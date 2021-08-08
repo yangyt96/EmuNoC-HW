@@ -174,7 +174,7 @@ begin
                 when s_RUN =>
                     if s_axis_tvalid = '1' and s_axis_tlast = '1' and count_flag = '0' and axis_tready = '1' then
                         state <= s_IDLE;
-                    elsif unsigned(i_noc_count) = ub_count and count_flag = '1' then
+                    elsif unsigned(i_noc_count) >= ub_count and count_flag = '1' then
                         state <= s_INJECT;
                     end if;
 
