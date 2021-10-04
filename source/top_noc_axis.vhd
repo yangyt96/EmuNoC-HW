@@ -61,7 +61,7 @@ begin
     m_axis_tready_vec(1)                                                                     <= m_axis_tready;
 
     -- Full NoC
-    inst_axis_full_noc : entity work.axis_homo_full_noc
+    inst_axis_homo_full_noc : entity work.axis_homo_full_noc
         generic map(
             BUFFER_DEPTH  => BUFFER_DEPTH,
             ROUTER_CREDIT => ROUTER_CREDIT,
