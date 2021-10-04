@@ -34,7 +34,7 @@ entity ring_fifo is
     generic (
         BUFFER_DEPTH : Integer   := 6;
         DATA_WIDTH   : Integer   := 32;
-        CNT_WIDTH    : Integer   := bit_width(BUFFER_DEPTH);
+        CNT_WIDTH    : Integer   := 3;  -- bit_width(BUFFER_DEPTH)
         RST_LVL      : Std_logic := '0' -- reset level
     );
     port (
