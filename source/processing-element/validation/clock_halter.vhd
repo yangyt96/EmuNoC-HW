@@ -1,5 +1,6 @@
 library ieee;
 use ieee.std_logic_1164.all;
+use ieee.std_logic_misc.all;
 use ieee.numeric_std.all;
 
 entity clock_halter is
@@ -14,6 +15,7 @@ entity clock_halter is
 
         i_halt : in Std_logic;
         o_halt : out Std_logic;
+        o_run  : out Std_logic;
 
         i_ub_count_wen : in Std_logic;
         i_ub_count     : in Std_logic_vector(CNT_WIDTH - 1 downto 0);
@@ -22,44 +24,74 @@ entity clock_halter is
 end entity;
 
 architecture implementation of clock_halter is
-    -- Constants
-    constant max_count : unsigned(CNT_WIDTH - 1 downto 0) := (others => '1');
-
-    -- Signals
     signal run_count : unsigned(CNT_WIDTH - 1 downto 0);
     signal ub_count  : unsigned(CNT_WIDTH - 1 downto 0);
     signal halt      : Std_logic;
-begin
+    signal run_flag  : Std_logic;
 
+    signal clk_count  : unsigned(0 downto 0);
+    signal inner_clk  : Std_logic;
+    signal halt_delay : Std_logic;
+begin
     -- IO
-    o_halt      <= halt;
-    o_run_count <= Std_logic_vector(run_count);
-    clkh        <= clk when halt = '0' else
+    o_halt <= halt;
+    clkh   <= inner_clk when halt = '0' and and_reduce(Std_logic_vector(clk_count)) = '1' else
         '0';
 
-    -- Inner
-    halt <= '1' when i_halt = '1' or run_count >= ub_count else
+    o_run_count <= Std_logic_vector(run_count);
+    o_run       <= '1' when (run_count < ub_count or run_flag = '1') else
+        '0';
+
+    -- Internal
+    halt <= '1' when (i_halt = '1' or run_count >= ub_count) else
+        '0';
+
+    inner_clk <= clk when clk_count(0) = '1' and halt = '0' and halt_delay = '0' else
         '0';
 
     process (clk, rst)
     begin
         if rst = RST_LVL then
-            run_count <= (others => '0');
-            ub_count  <= (others => '0');
+            clk_count <= (others => '0');
+        elsif rising_edge(clk) then
+            if halt = '0' and halt_delay = '0' then
+                clk_count <= clk_count + 1;
+            else
+                clk_count <= (others => '0');
+            end if;
+        end if;
+    end process;
+
+    process (clk, rst)
+    begin
+        if rst = RST_LVL then
+            ub_count   <= (others => '0');
+            run_flag   <= '0';
+            halt_delay <= '0';
+            run_count  <= (others => '0');
         elsif rising_edge(clk) then
 
+            -- set upper bound
             if i_ub_count_wen = '1' then
                 ub_count <= unsigned(i_ub_count);
             end if;
 
-            if run_count < ub_count and halt = '0' then
-                run_count <= run_count + 1;
+            -- flag for 1 cycle to know that it is assigned
+            if i_ub_count_wen = '1' then
+                run_flag <= '1';
+            else
+                run_flag <= '0';
             end if;
 
-            if run_count = max_count and ub_count = max_count then
-                run_count <= (others => '0');
-                ub_count  <= (others => '0');
+            -- count up when no halted
+            if run_count < ub_count and halt = '0' and and_reduce(Std_logic_vector(clk_count)) = '1' then
+                run_count <= run_count + 1;
+            elsif i_ub_count_wen = '1' and unsigned(i_ub_count) < run_count then
+                -- run_count <= (others => '0');
+                run_count <= unsigned(i_ub_count);
             end if;
+
+            halt_delay <= halt;
 
         end if;
     end process;

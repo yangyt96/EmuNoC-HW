@@ -51,8 +51,9 @@ architecture implementation of top_axis_validation is
     signal ejects_axis_tready : Std_logic_vector(PE_NUM - 1 downto 0);
 
     signal clkh         : Std_logic;
-    signal halt         : Std_logic;
-    signal halt_pe      : Std_logic;
+    signal clkh_run     : Std_logic;
+    signal ps_halt      : Std_logic;
+    signal clk_halt     : Std_logic;
     signal ub_count_wen : Std_logic;
     signal ub_count     : Std_logic_vector(31 downto 0);
     signal noc_count    : Std_logic_vector(31 downto 0);
@@ -62,7 +63,7 @@ begin
     -- CLK CTRL
     inst_clock_halter : entity work.clock_halter
         generic map(
-            CNT_WIDTH => 32,
+            CNT_WIDTH => C_AXIS_TDATA_WIDTH,
             RST_LVL   => RST_LVL
         )
         port map(
@@ -70,8 +71,9 @@ begin
             rst  => rst,
             clkh => clkh,
 
-            i_halt => halt,
-            o_halt => halt_pe,
+            i_halt => ps_halt,
+            o_halt => clk_halt,
+            o_run  => clkh_run,
 
             i_ub_count_wen => ub_count_wen,
             i_ub_count     => ub_count,
@@ -84,6 +86,9 @@ begin
             clk => clk,
             rst => rst,
 
+            i_run     => clkh_run,
+            i_ps_halt => ps_halt,
+
             s_axis_tvalid => s_axis_tvalid,
             s_axis_tdata  => s_axis_tdata,
             s_axis_tstrb  => s_axis_tstrb,
@@ -95,8 +100,7 @@ begin
             i_fifos_wvalid => fifos_wvalid,
 
             o_ub_count_wen => ub_count_wen,
-            o_ub_count     => ub_count,
-            i_noc_count    => noc_count
+            o_ub_count     => ub_count
         );
 
     -- HALT PE
@@ -108,10 +112,9 @@ begin
                 RST_LVL            => RST_LVL
             )
             port map(
-                clk => clk,
-                rst => rst,
-
-                i_halt => halt_pe,
+                clk  => clk,
+                rst  => rst,
+                clkh => clkh,
 
                 i_fifo_wdata  => fifo_wdata,
                 i_fifo_wen    => fifos_wen(i),
@@ -128,7 +131,7 @@ begin
     -- CLK HALT
     inst_axis_homo_full_noc : entity work.axis_homo_full_noc
         generic map(
-            BUFFER_DEPTH       => max_packet_len + 1,
+            BUFFER_DEPTH       => max_packet_len,
             ROUTER_CREDIT      => 2,
             C_AXIS_TDATA_WIDTH => C_AXIS_TDATA_WIDTH
         )
@@ -158,10 +161,9 @@ begin
                 RST_LVL            => RST_LVL
             )
             port map(
-                clk => clk,
-                rst => rst,
-
-                i_halt => halt_pe,
+                clk  => clk,
+                rst  => rst,
+                clkh => clkh,
 
                 o_fifo_rdata  => fifos_rdata(i),
                 i_fifo_ren    => fifos_ren(i),
@@ -191,7 +193,8 @@ begin
             o_fifos_ren    => fifos_ren,
             i_fifos_rvalid => fifos_rvalid,
 
-            o_halt      => halt,
+            i_halt      => clk_halt,
+            o_halt      => ps_halt,
             i_noc_count => noc_count
         );
 

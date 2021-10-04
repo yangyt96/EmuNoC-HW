@@ -36,6 +36,7 @@ entity axis_ps_eject is
         o_fifos_ren    : out Std_logic_vector(PE_NUM - 1 downto 0);
         i_fifos_rvalid : in Std_logic_vector(PE_NUM - 1 downto 0);
 
+        i_halt      : in Std_logic;
         o_halt      : out Std_logic;
         i_noc_count : in Std_logic_vector(CNT_WIDTH - 1 downto 0)
     );
@@ -151,7 +152,7 @@ begin
         elsif rising_edge(clk) then
             case state is
                 when s_IDLE =>
-                    if halt = '1' then
+                    if halt = '1' and i_halt = '1' then
                         state <= s_CYC;
                     end if;
 

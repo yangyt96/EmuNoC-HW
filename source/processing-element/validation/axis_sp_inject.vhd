@@ -39,7 +39,9 @@ entity axis_sp_inject is
 
         o_ub_count_wen : out Std_logic;
         o_ub_count     : out Std_logic_vector(CNT_WIDTH - 1 downto 0);
-        i_noc_count    : in Std_logic_vector(CNT_WIDTH - 1 downto 0)
+
+        i_run     : in Std_logic;
+        i_ps_halt : in Std_logic
     );
 end entity;
 
@@ -88,27 +90,29 @@ architecture implementation of axis_sp_inject is
     type t_STATE is (
         s_IDLE,
         s_RUN,
+        s_RDONE,
         s_INJECT,
         s_IDONE
     );
-    signal state : t_STATE;
 
-    signal count_flag : Std_logic;
-    signal ub_count   : unsigned(CNT_WIDTH - 1 downto 0);
-
+    -- reg
+    signal state       : t_STATE;
+    signal run_flag    : Std_logic;
     signal axis_tready : Std_logic;
-    signal fifos_wen   : Std_logic_vector(PE_NUM - 1 downto 0);
 
-    signal src_id : Integer range 0 to PE_NUM - 1 := 0;
+    -- wire
+    signal fifos_wen : Std_logic_vector(PE_NUM - 1 downto 0);
+    signal src_id    : Integer range 0 to PE_NUM - 1 := 0;
 
 begin
     -- I/O
     s_axis_tready <= axis_tready;
 
-    o_ub_count_wen <= '1' when state = s_RUN and axis_tready = '1' else
+    o_ub_count_wen <= '1' when state = s_RUN and run_flag = '0' else
         '0';
     o_ub_count <= s_axis_tdata when state = s_RUN else
         (others => '0');
+
     o_fifo_wdata <= conv_hdr(s_axis_tdata) when state = s_INJECT else
         (others => '0');
     o_fifos_wen <= fifos_wen when state = s_INJECT and axis_tready = '1' else
@@ -119,42 +123,33 @@ begin
     fifos_wen <= Std_logic_vector(shift_left(to_unsigned(1, PE_NUM), src_id));
 
     -- Internal register
-    process (clk, rst)
-    begin
-        if rst = RST_LVL then
-            count_flag <= '0';
-            ub_count   <= (others => '0');
-        elsif rising_edge(clk) then
-
-            if state = s_IDLE and s_axis_tvalid = '1' then
-                count_flag <= '0';
-            elsif state = s_RUN and s_axis_tvalid = '1' and axis_tready = '1' and count_flag = '0' then
-                count_flag <= '1';
-            elsif state = s_IDONE then
-                count_flag <= '0';
-            end if;
-
-            if state = s_RUN and s_axis_tlast = '1' and s_axis_tvalid = '1' and axis_tready = '1' and count_flag = '0' then
-                ub_count <= unsigned(s_axis_tdata);
-            elsif state = s_RUN and s_axis_tvalid = '1' and axis_tready = '1' and count_flag = '0' then
-                ub_count <= unsigned(s_axis_tdata);
-            end if;
-
-        end if;
-    end process;
-
-    process (clk, rst, count_flag)
+    process (clk, rst, axis_tready)
     begin
         if rst = RST_LVL then
             axis_tready <= '0';
         elsif rising_edge(clk) then
-            if state = s_RUN and axis_tready = '0' and s_axis_tvalid = '1' and count_flag = '0' then
+            if state = s_RDONE and axis_tready = '0' and s_axis_tvalid = '1' then
                 axis_tready <= '1';
             elsif state = s_INJECT and axis_tready = '0' and s_axis_tvalid = '1' and i_fifos_wvalid(src_id) = '1' then
                 axis_tready <= '1';
             else
                 axis_tready <= '0';
             end if;
+        end if;
+    end process;
+
+    process (clk, rst, run_flag)
+    begin
+        if rst = RST_LVL then
+            run_flag <= '0';
+        elsif rising_edge(clk) then
+
+            if state = s_RUN and i_run = '1' then
+                run_flag <= '1';
+            elsif state /= s_RUN then
+                run_flag <= '0';
+            end if;
+
         end if;
     end process;
 
@@ -167,14 +162,19 @@ begin
             case state is
 
                 when s_IDLE =>
-                    if s_axis_tvalid = '1' then
+                    if s_axis_tvalid = '1' and i_run = '0' and i_ps_halt = '0' then
                         state <= s_RUN;
                     end if;
 
                 when s_RUN =>
-                    if s_axis_tvalid = '1' and s_axis_tlast = '1' and count_flag = '0' and axis_tready = '1' then
-                        state <= s_IDLE;
-                    elsif unsigned(i_noc_count) >= ub_count and count_flag = '1' then
+                    if i_run = '0' and i_ps_halt = '0' and run_flag = '1' then
+                        state <= s_RDONE;
+                    end if;
+
+                when s_RDONE =>
+                    if s_axis_tvalid = '1' and s_axis_tlast = '1' and axis_tready = '1' then
+                        state <= s_IDONE;
+                    elsif s_axis_tvalid = '1' and axis_tready = '1' then
                         state <= s_INJECT;
                     end if;
 

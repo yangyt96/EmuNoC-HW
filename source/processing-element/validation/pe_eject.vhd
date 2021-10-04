@@ -12,9 +12,9 @@ entity pe_eject is
         RST_LVL            : Std_logic := RST_LVL
     );
     port (
-        clk    : in Std_logic;
-        rst    : in Std_logic;
-        i_halt : in Std_logic;
+        clk  : in Std_logic;
+        rst  : in Std_logic;
+        clkh : in Std_logic;
 
         o_fifo_rdata  : out Std_logic_vector(C_AXIS_TDATA_WIDTH - 1 downto 0);
         i_fifo_ren    : in Std_logic;
@@ -35,40 +35,64 @@ architecture implementation of pe_eject is
         s_WORK,
         s_WDONE
     );
+
     signal state : t_STATE;
 
     signal axis_tready : Std_logic;
 
-    signal fifo_wdata  : Std_logic_vector(C_AXIS_TDATA_WIDTH - 1 downto 0);
-    signal fifo_wen    : Std_logic;
-    signal fifo_wvalid : Std_logic;
+    signal fifo_wen      : Std_logic;
+    signal fifo_wen_flag : Std_logic;
+    signal fifo_wdata    : Std_logic_vector(C_AXIS_TDATA_WIDTH - 1 downto 0);
+    signal fifo_wvalid   : Std_logic;
 
 begin
     -- IO
     s_axis_tready <= axis_tready;
 
     -- Internal wire
-    axis_tready <= '1' when state = s_WORK and s_axis_tvalid = '1' and i_halt = '0' else
-        '0';
-    fifo_wen <= '1' when state = s_WDONE and fifo_wvalid = '1' else -- ! only 1 clk cyc
+    axis_tready <= '1' when state = s_WORK and s_axis_tvalid = '1' else
         '0';
 
-    process (clk, rst)
+    -- Internal register
+    process (clk, rst, fifo_wen, fifo_wen_flag)
+    begin
+        if rst = RST_LVL then
+            fifo_wen      <= '0';
+            fifo_wen_flag <= '0';
+        elsif rising_edge(clk) then
+
+            if state = s_WDONE and fifo_wen = '0' and fifo_wen_flag = '0' and fifo_wvalid = '1' then
+                fifo_wen <= '1';
+            else
+                fifo_wen <= '0';
+            end if;
+
+            if state = s_WDONE and fifo_wen_flag = '0' and fifo_wvalid = '1' then
+                fifo_wen_flag <= '1';
+            elsif state = s_IDLE then
+                fifo_wen_flag <= '0';
+            end if;
+
+        end if;
+    end process;
+
+    process (clkh, rst, fifo_wdata)
     begin
         if rst = RST_LVL then
             fifo_wdata <= (others => '0');
-        elsif rising_edge(clk) then
-            if state = s_IDLE and s_axis_tvalid = '1' then
+        elsif rising_edge(clkh) then
+            if state = s_WORK and s_axis_tvalid = '1' and axis_tready = '1' then
                 fifo_wdata <= s_axis_tdata;
             end if;
         end if;
     end process;
 
-    process (clk, rst)
+    -- FSM
+    process (clkh, rst, state)
     begin
         if rst = RST_LVL then
             state <= s_IDLE;
-        elsif rising_edge(clk) then
+        elsif rising_edge(clkh) then
             case state is
 
                 when s_IDLE =>
@@ -82,7 +106,7 @@ begin
                     end if;
 
                 when s_WDONE =>
-                    if fifo_wen = '1' then
+                    if fifo_wen_flag = '1' and fifo_wen = '0' then
                         state <= s_IDLE;
                     end if;
 
@@ -90,6 +114,7 @@ begin
         end if;
     end process;
 
+    -- Instances
     inst_ring_fifo : entity work.ring_fifo
         generic map(
             BUFFER_DEPTH => BUFFER_DEPTH,
