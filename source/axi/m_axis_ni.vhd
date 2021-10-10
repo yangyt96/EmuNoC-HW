@@ -31,7 +31,7 @@ entity M_AXIS_NI is
         C_M_AXIS_TDATA_WIDTH : Integer := 32;
         FLIT_SIZE            : Integer := 32;
         VC_NUM               : Integer := 2;
-        BUFFER_DEPTH         : Integer := max_packet_len + 1;
+        BUFFER_DEPTH         : Integer := max_packet_len;
 
         RST_LVL : Std_logic := '0'
     );
