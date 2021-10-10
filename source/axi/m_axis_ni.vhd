@@ -149,7 +149,9 @@ begin
             case state is
 
                 when s_IDLE =>
-                    if or_reduce(pkts_arrive) = '1' then
+                    if VC_NUM = 1 and fifos_read_valid(0) = '1' then -- make it generic?
+                        state <= s_INIT;
+                    elsif or_reduce(pkts_arrive) = '1' then
                         state <= s_INIT;
                     end if;
 
