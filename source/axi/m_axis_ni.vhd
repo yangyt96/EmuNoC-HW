@@ -111,9 +111,7 @@ begin
         '0';
     end generate;
 
-    gen_swap_endian : for i in 0 to VC_NUM - 1 generate
-        clz_data(i) <= pkts_arrive(VC_NUM - 1 - i);
-    end generate;
+    clz_data <= pkts_arrive;
 
     -- determine the taddr
     process (M_AXIS_ACLK, M_AXIS_ARESETN)
@@ -174,7 +172,7 @@ begin
     end process;
 
     -- instances
-    inst_clz : entity work.count_lead_zero
+    inst_clz : entity work.count_trail_zero
         generic map(
             DATA_WIDTH => VC_NUM,
             CNT_WIDTH  => bit_width(VC_NUM)
