@@ -132,7 +132,7 @@ begin
     inst_axis_homo_full_noc : entity work.axis_homo_full_noc
         generic map(
             BUFFER_DEPTH       => max_packet_len,
-            ROUTER_CREDIT      => 2,
+            ROUTER_CREDIT      => max_vc_num,
             C_AXIS_TDATA_WIDTH => C_AXIS_TDATA_WIDTH
         )
         port map(

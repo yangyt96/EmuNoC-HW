@@ -6,7 +6,7 @@ use work.NOC_3D_PACKAGE.all;
 
 entity axis_homo_full_noc is
     generic (
-        BUFFER_DEPTH  : Integer := max_packet_len + 1;
+        BUFFER_DEPTH  : Integer := max_packet_len;
         ROUTER_CREDIT : Integer := max_vc_num;
         NUM_ROUTER    : Integer := max_x_dim * max_y_dim * max_z_dim;
         NUM_IO        : Integer := max_x_dim * max_y_dim * max_z_dim * max_vc_num;
