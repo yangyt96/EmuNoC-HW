@@ -54,6 +54,18 @@ fname_flit_data = "flit_data.txt"
 # Global variables
 pkt_id = 0
 
+node_to_coord = {}
+coord_to_node = {}
+node = 0
+for z in range(max_z_dim):
+    for y in range(max_y_dim):
+        for x in range(max_x_dim):
+            xyz = (x, y, z)
+            node_to_coord[node] = xyz
+            coord_to_node[xyz] = node
+            print(node, xyz)
+            node += 1
+
 # ----------------------------------------------
 # Functions
 
@@ -160,81 +172,169 @@ if __name__ == "__main__":
     td = TestData()
 
     ##########################################################################
-    # test: dst node = 4, intermediate node = 5, src node = 1, 5, 8
+    # test: all adjacent to middle
+    # | |s| |
+    # |s|d|s|
+    # | |s| |
     time = 0
     data = {}
     noc_time.append(int_to_bin(time, flit_size))
     data["flit_data"] = [int_to_bin(time, flit_size)]
     data["inj_time"] = [time]
 
-    data["flit_data"].append(create_packet(1, 4, 31))
-    data["flit_data"].append(create_packet(5, 4, 31))
-    data["flit_data"].append(create_packet(8, 4, 31))
+    dst_xyz = (max_x_dim//2, max_y_dim//2, max_z_dim//2)
+    dst = coord_to_node[dst_xyz]
+
+    # west
+    src_xyz = (dst_xyz[0] - 1, dst_xyz[1], dst_xyz[2])
+    src = coord_to_node[src_xyz]
+    data["flit_data"].append(create_packet(src, dst, 31))
+    # east
+    src_xyz = (dst_xyz[0] + 1, dst_xyz[1], dst_xyz[2])
+    src = coord_to_node[src_xyz]
+    data["flit_data"].append(create_packet(src, dst, 31))
+    # south
+    src_xyz = (dst_xyz[0], dst_xyz[1] - 1, dst_xyz[2])
+    src = coord_to_node[src_xyz]
+    data["flit_data"].append(create_packet(src, dst, 31))
+    # north
+    src_xyz = (dst_xyz[0], dst_xyz[1] + 1, dst_xyz[2])
+    src = coord_to_node[src_xyz]
+    data["flit_data"].append(create_packet(src, dst, 31))
 
     data["pkt_len"] = [len(data["flit_data"])]
 
     td.add(data)
 
     ##########################################################################
-    # test: dst node = 5, src node = 1, 4, 6, 9
+    # test: 3 source to 1 dst pass 1 intermediate
+    # | |s| |
+    # |s|i|d|
+    # | |s| |
     time = 100
     data = {}
     noc_time.append(int_to_bin(time, flit_size))
     data["flit_data"] = [int_to_bin(time, flit_size)]
     data["inj_time"] = [time]
 
-    data["flit_data"].append(create_packet(1, 5, 31))
-    data["flit_data"].append(create_packet(4, 5, 31))
-    data["flit_data"].append(create_packet(6, 5, 31))
-    data["flit_data"].append(create_packet(9, 5, 31))
+    inter_xyz = (max_x_dim//2, max_y_dim//2, max_z_dim//2)
+    dst_xyz = (inter_xyz[0] + 1, inter_xyz[1], inter_xyz[2])
+    dst = coord_to_node[dst_xyz]
+
+    src_xyz = (inter_xyz[0] - 1, inter_xyz[1], inter_xyz[2])
+    src = coord_to_node[src_xyz]
+    data["flit_data"].append(create_packet(src, dst, 31))
+
+    src_xyz = (inter_xyz[0], inter_xyz[1] - 1, inter_xyz[2])
+    src = coord_to_node[src_xyz]
+    data["flit_data"].append(create_packet(src, dst, 31))
+
+    src_xyz = (inter_xyz[0], inter_xyz[1] + 1, inter_xyz[2])
+    src = coord_to_node[src_xyz]
+    data["flit_data"].append(create_packet(src, dst, 31))
 
     data["pkt_len"] = [len(data["flit_data"])]
 
     td.add(data)
 
     ##########################################################################
-    # test: circular src->dst:
-    # 5->6, 6->10, 10->9, 9->5
+    # test: small node num to larger by one, the largest go to 0
     time = 200
     data = {}
     noc_time.append(int_to_bin(time, flit_size))
     data["flit_data"] = [int_to_bin(time, flit_size)]
     data["inj_time"] = [time]
 
-    data["flit_data"].append(create_packet(5, 6, 31))
-    data["flit_data"].append(create_packet(6, 10, 31))
-    data["flit_data"].append(create_packet(10, 9, 31))
-    data["flit_data"].append(create_packet(9, 5, 31))
+    for i in range(num_pe):
+        data["flit_data"].append(create_packet(i, (i+1) % (num_pe - 1), 31))
 
     data["pkt_len"] = [len(data["flit_data"])]
 
     td.add(data)
 
     ##########################################################################
-    # test: 4x4x1: 2, 3, 5, 6 -> 0
-    # BUG: round-robin scheduling method (rr_arbiter_no_delay), FIXED with clz arbiter (rr_arbiter_clz)
-    # However, this can resolve the issue when both vc go to the same direction (this will occur on xyz routing)
-    # What about if they go to different direction?
-    # ! suspect stuck at node 11, 4 pkts are pass
-    # ! Pattern to cause deadlock
-    # ! | |s|s| |
-    # ! |d| |s|s|
+    # test: dst = 0, src all x direction of node 0 and all y direction of node 0
+    # BUG: round-robin scheduling method (rr_arbiter_no_delay), FIXED by setting the rr_arbiter.ack=1,
+    # always acknowledge to update the arbiter, if the request changes, then the grant will change at the same time
+    # The issue when both vc go to the same direction (this will occur on xyz routing)
+    #! | |s|s| |
+    #! |d| |s|s|
     time = 300
     data = {}
     noc_time.append(int_to_bin(time, flit_size))
     data["flit_data"] = [int_to_bin(time, flit_size)]
     data["inj_time"] = [time]
 
-    dst = 3
-    data["flit_data"].append(create_packet(5, 0, 5))
-    data["flit_data"].append(create_packet(6, 0, 3))
-    data["flit_data"].append(create_packet(2, 0, 5))
-    data["flit_data"].append(create_packet(3, 0, 3))
+    for x in range(1, max_x_dim):
+        xyz = (x, 0, 0)
+        src = coord_to_node[xyz]
+        data["flit_data"].append(create_packet(src, 0, 31))
+    for y in range(1, max_y_dim):
+        xyz = (0, y, 0)
+        src = coord_to_node[xyz]
+        data["flit_data"].append(create_packet(src, 0, 31))
+    for z in range(1, max_z_dim):
+        xyz = (0, 0, z)
+        src = coord_to_node[xyz]
+        data["flit_data"].append(create_packet(src, 0, 31))
 
     data["pkt_len"] = [len(data["flit_data"])]
 
     td.add(data)
 
+    ##########################################################################
+    # test: all to middle in sequence
+    time = 500
+    data = {}
+    noc_time.append(int_to_bin(time, flit_size))
+    data["flit_data"] = [int_to_bin(time, flit_size)]
+    data["inj_time"] = [time]
+
+    dst_xyz = (max_x_dim//2, max_y_dim//2, max_z_dim//2)
+    dst = coord_to_node[dst_xyz]
+    for src in range(num_pe):
+        if src == dst:
+            continue
+        data["flit_data"].append(create_packet(src, dst, 31))
+
+    data["pkt_len"] = [len(data["flit_data"])]
+
+    td.add(data)
+
+    ##########################################################################
+    # test: all to all, this test requires a lot of simulation time, set larger time
+    time = 0
+    data = {}
+    noc_time.append(int_to_bin(time, flit_size))
+    data["flit_data"] = [int_to_bin(time, flit_size)]
+    data["inj_time"] = [time]
+
+    for src in range(num_pe):
+        for dst in range(num_pe):
+            if src == dst:
+                continue
+            data["flit_data"].append(create_packet(src, dst, 15))
+
+    data["pkt_len"] = [len(data["flit_data"])]
+
+    td.add(data)
+
+    # ##########################################################################
+    # # test: arbitrary
+    # time = 0
+    # data = {}
+    # noc_time.append(int_to_bin(time, flit_size))
+    # data["flit_data"] = [int_to_bin(time, flit_size)]
+    # data["inj_time"] = [time]
+
+    # data["flit_data"].append(create_packet(1, 2, 1))
+    # # data["flit_data"].append(create_packet(1, 0, 1))
+
+    # data["pkt_len"] = [len(data["flit_data"])]
+
+    # td.add(data)
+
+    ##########################################################################
     # run to inf
     data = {}
     noc_time.append("1"*flit_size)
@@ -245,34 +345,7 @@ if __name__ == "__main__":
 
     td.to_txt("in")
 
-    # ##########################################################################
-    # # test: all to all in sequence
-    # time = 500
-    # data = {}
-    # noc_time.append(int_to_bin(time, flit_size))
-    # data["flit_data"] = [int_to_bin(time, flit_size)]
-    # data["inj_time"] = [time]
-
-    # for src in range(num_pe):
-    #     for dst in range(num_pe):
-    #         if src == dst:
-    #             continue
-    #         data["flit_data"].append(create_packet(src, dst, 31))
-
-    # data["pkt_len"] = [len(data["flit_data"])]
-
-    # td.add(data)
-
-    # # run to inf
-    # data = {}
-    # noc_time.append("1"*flit_size)
-    # data["flit_data"] = ["1"*flit_size]
-    # data["inj_time"] = [0]
-    # data["pkt_len"] = [1]
-    # td.add(data)
-
-    # td.to_txt("in")
-
+    ##########################################################################
     # make directory for outputs
     os.system("rm -r out/*")
     for i in range(num_pe):
