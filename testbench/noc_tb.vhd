@@ -218,7 +218,7 @@ begin
                 i_local_incr_rx_vec => local_incr_tx_vec(max_vc_num * (i + 1) - 1 downto max_vc_num * i),
 
                 -- AXI Stream Slave interface
-                S_AXIS_ACLK    => clk,
+                S_AXIS_ACLK    => clkh,
                 S_AXIS_ARESETN => rst,
 
                 S_AXIS_TREADY => inject_axis_tready_vec(i),
