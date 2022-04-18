@@ -79,7 +79,6 @@ begin
             FLIT_SIZE            => DATA_WIDTH,
             VC_NUM               => VC_NUM,
             ROUTER_CREDIT        => ROUTER_CREDIT,
-            WAIT_CLK             => 2,
             C_S_AXIS_TDATA_WIDTH => DATA_WIDTH,
             RST_LVL              => RST_LVL
         )
