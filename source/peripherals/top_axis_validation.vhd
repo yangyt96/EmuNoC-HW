@@ -61,6 +61,7 @@ architecture implementation of top_axis_validation is
 begin
 
     -- CLK CTRL
+    -- inst_clock_halter : entity work.clock_halter_xilinx
     inst_clock_halter : entity work.clock_halter
         generic map(
             CNT_WIDTH => C_AXIS_TDATA_WIDTH,
