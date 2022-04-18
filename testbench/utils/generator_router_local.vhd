@@ -8,8 +8,8 @@ use work.TESTBENCH_PACKAGE.all;
 
 entity generator_router_local is
     generic (
-        Xis                : Integer           := 0;
-        Yis                : Integer           := 0;
+        Xis                : Integer           := 1;
+        Yis                : Integer           := 1;
         Zis                : Integer           := 0;
         port_num           : Integer           := 5;
         port_exist         : integer_vec       := (0, 1, 2, 3, 4);
