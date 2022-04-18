@@ -27,8 +27,8 @@ architecture behave of m_axis_ni_tb is
     signal rec_axis_tready : Std_logic;
 
     signal local_flit  : Std_logic_vector(DATA_WIDTH - 1 downto 0);
-    signal local_write : Std_logic_vector(VC_NUM - 1 downto 0);
-    signal local_incr  : Std_logic_vector(VC_NUM - 1 downto 0);
+    signal local_write : Std_logic_vector(VC_NUM - 1 downto 0) := (others => '0');
+    signal local_incr  : Std_logic_vector(VC_NUM - 1 downto 0) := (others => '0');
 
 begin
 
