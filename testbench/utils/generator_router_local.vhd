@@ -16,7 +16,7 @@ entity generator_router_local is
         vc_num_vec         : integer_vec       := (2, 2, 2, 2, 2);
         vc_num_out_vec     : integer_vec       := (2, 2, 2, 2, 2);
         vc_depth_array     : vc_prop_int_array := ((2, 2), (2, 2), (2, 2), (2, 2), (2, 2));
-        vc_depth_out_array : vc_prop_int_array := ((32, 32), (2, 2), (2, 2), (2, 2), (2, 2));
+        vc_depth_out_array : vc_prop_int_array := ((max_packet_len, max_packet_len), (2, 2), (2, 2), (2, 2), (2, 2));
         rout_algo          : String            := "XYZ"
     );
     port (
