@@ -32,17 +32,35 @@ architecture behave of m_axis_ni_tb is
 
 begin
 
-    inst_generator : entity work.generator_router_local
+    -- inst_generator : entity work.generator_router_local
+    --     generic map(
+    --         vc_depth_out_array => ((BUFFER_DEPTH, BUFFER_DEPTH), (2, 2), (2, 2), (2, 2), (2, 2))
+    --     )
+    --     port map(
+    --         clk => clk,
+    --         rst => rst,
+
+    --         o_local_tx          => local_flit,
+    --         o_local_vc_write_tx => local_write,
+    --         i_local_incr_rx     => local_incr
+    --     );
+
+    inst_traffic : entity work.traffic_gen
         generic map(
-            vc_depth_out_array => ((BUFFER_DEPTH, BUFFER_DEPTH), (2, 2), (2, 2), (2, 2), (2, 2))
+            flit_width          => flit_size,
+            router_credit       => max_packet_len,
+            srl_fifo_depth      => 200,
+            inj_time_text       => "testdata/m_axis_ni_tb/in/" & "inj_time.txt",  -- r
+            packet_length_text  => "testdata/m_axis_ni_tb/in/" & "pkt_len.txt",   -- r
+            image_2_flits_text  => "testdata/m_axis_ni_tb/in/" & "flit_data.txt", -- r
+            inj_time_2_noc_text => "testdata/m_axis_ni_tb/out/" & "inj_time.txt"  -- w
         )
         port map(
-            clk => clk,
-            rst => rst,
-
-            o_local_tx          => local_flit,
-            o_local_vc_write_tx => local_write,
-            i_local_incr_rx     => local_incr
+            clk      => clk,
+            rst      => rst,
+            valid    => local_write(0),
+            incr     => local_incr(0),
+            data_out => local_flit
         );
 
     inst_ni_master : entity work.m_axis_ni
