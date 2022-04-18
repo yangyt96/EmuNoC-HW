@@ -255,7 +255,7 @@ begin
                 rst     => rst,
                 valid   => local_vc_write_tx(i),
                 incr    => local_incr_rx_vec(i),
-                data_in => iconv_hdr(local_tx(i/2))
+                data_in => iconv_hdr(local_tx(i/max_vc_num))
             );
     end generate;
 
