@@ -54,6 +54,7 @@ begin
 		if clk = '1' and clk'event and rst = not(RST_LVL) then
 			if (valid = '1') then
 				write(rowOut, data_in);
+				-- hwrite(rowOut, data_in);
 				writeline(rec_data, rowOut);
 				data_time := now - clk_period;
 				write(rowOut, data_time);
