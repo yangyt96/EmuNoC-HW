@@ -100,3 +100,7 @@ VARS: ROUTER_CREDIT => 2,
 a. clock_halter -> clock_halter_xilinx
 2. fifo.vhd in full_noc needs to use Vivado FIFO IP
 3. ring_fifo.vhd
+
+# TODO
+1. Change it to synthesizable code. Follow: https://www.youtube.com/watch?v=BIqLk23hE90
+2. Use OSVVM to automate the verification. Checkout: https://github.com/OSVVM/OSVVM
