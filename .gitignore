@@ -1,15 +1,26 @@
 # compiled files
 *.vcd
 ghdlwork/*
+*.opt
+*.ghw
 
 # source codes
 source/full*
 *bkp
 clz
+paper
+template
 
 # test data
-testdata/gen_rec
-testdata/pic/in
-testdata/pic/out
+testdata/gen_rec/in
+testdata/gen_rec/out
 testdata/m_axis_ni_tb/in
 testdata/m_axis_ni_tb/out
+testdata/noc_deadlock_tb/in
+testdata/noc_deadlock_tb/out
+testdata/noc_tb/in
+testdata/noc_tb/out
+testdata/pic/in
+testdata/pic/out
+testdata/top_axis_validation_tb/in
+testdata/top_axis_validation_tb/out
