@@ -26,14 +26,18 @@ compile:
 	$(GHDL_CMD) -i $(GHDL_FLAGS) --workdir=$(WORK_DIR) --work=work $(TESTBENCH_FILES) $(SOURCE_FILES)
 	$(GHDL_CMD) -m $(GHDL_FLAGS) --workdir=$(WORK_DIR) --work=work $(TEST_NAME)
 
+# --read-wave-opt=wave-rd.opt
+# --write-wave-opt=wave-wr.opt
 run:
 	$(GHDL_CMD) -r $(GHDL_FLAGS) --workdir=$(WORK_DIR) --work=work $(TEST_NAME) --wave=$(TEST_NAME).ghw --ieee-asserts=disable --stop-time=$(STOP_TIME)
 
+
+# .vcd .ghw
 view:
 	gtkwave $(TEST_NAME).ghw
 
 clean:
-	rm -f *.vcd *.txt
+	rm -f *.vcd *.txt *.ghw
 	rm -rf $(WORK_DIR)/*.cf
 	rm -rf ./testdata/gen_rec/out/*
 	rm -rf ./testdata/pic/out/*
