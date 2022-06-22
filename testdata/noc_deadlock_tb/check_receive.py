@@ -106,6 +106,9 @@ if __name__ == "__main__":
 
     lost_packets = set(inj_pkts) - set(ej_flits) - set(noc_time)
 
+    print("Correct receive pkt count:", len(
+        set(inj_pkts) - lost_packets - set(noc_time) - set(lost_flits)))
+
     print("wrong dst num:", len(wrong_dsts))
 
     print("lost packets:")
