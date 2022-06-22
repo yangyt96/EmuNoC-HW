@@ -14,7 +14,6 @@ def bit_width(val: int):
         return 1
     else:
         return 0
-    return len(bin(val))-2
 
 
 def int_to_bin(val, length):
