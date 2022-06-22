@@ -35,17 +35,20 @@ make view TEST_NAME=m_axis_ni_tb
 
 ### fix 2: noc_3d_package
 
-1. func 1
+1.
 
+```
   function bit_width(x : positive) return positive is
   begin
     assert (x > 1) report "Encoding for less than two values is not possible"
       severity failure;
     return positive(ceil(log2(real(x))));
   end function;
+```
 
   to
 
+```
   function bit_width(x : Positive) return Positive is
   begin
     if (x > 1) then
@@ -56,29 +59,43 @@ make view TEST_NAME=m_axis_ni_tb
       return 0;
     end if;
   end function;
+```
 
-2. positive(ceil(log2(real(max_z_dim))))-1
+2. If max_z_dim == 1
+```
+positive(ceil(log2(real(max_z_dim))))-1
+```
 
   to
 
+```
   0
-
-  for max_z_dim == 1
+```
 
 
 ### fix 3: switch_allocator.vhd
 
 1. rr_arbiter at vc allocation
 
-    -- ack   => switch_ack(i),
+```
+    ack   => switch_ack(i),
+```
+to
+```
     ack   => '1',
+```
 
 2. one_hot2int --> count_trail_zero
-
+```
   winner := lr + one_hot2int(channel_grant(ur downto lr));
+```
   to
+```
   winner := lr + count_trail_zero(channel_grant(ur downto lr)) mod vc_num_out_vec(i);
+```
+and add:
 
+```
   function count_trail_zero(var : Std_logic_vector) return Integer is
     variable tmp                  : Std_logic_vector(var'length - 1 downto 0) := var;
   begin
@@ -89,6 +106,7 @@ make view TEST_NAME=m_axis_ni_tb
     end loop;
     return tmp'length;
   end function;
+```
 
 
 ## Requires automation
