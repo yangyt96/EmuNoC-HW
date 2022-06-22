@@ -31,11 +31,13 @@ make view TEST_NAME=m_axis_ni_tb
 
 ### fix 1: full_noc
 
-1. vc_depth_out_array           => ((others => max_packet_len),
+```
+vc_depth_out_array           => ((others => max_packet_len),
+```
 
 ### fix 2: noc_3d_package
 
-1.
+1. function bit_width
 
 ```
   function bit_width(x : positive) return positive is
@@ -123,3 +125,4 @@ a. clock_halter -> clock_halter_xilinx
 # TODO
 1. Change it to synthesizable code. Follow: https://www.youtube.com/watch?v=BIqLk23hE90
 2. Use OSVVM to automate the verification. Checkout: https://github.com/OSVVM/OSVVM
+3. Some variables and constants need to be consistence
