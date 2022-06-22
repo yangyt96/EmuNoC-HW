@@ -26,7 +26,7 @@ end entity;
 
 architecture behave of top is
 begin
-    inst_top : entity work.top_reflect
+    inst_top : entity work.top_axis_validation
         port map(
             clk => clk,
             rst => rst,
