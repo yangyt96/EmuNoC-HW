@@ -37,10 +37,11 @@ def read_file(fname):
 
 # ----------------------------------------------
 # NoC configuration
-max_vc_num = 2  # check noc pkg
 max_x_dim = 4  # check noc pkg
 max_y_dim = 4  # check noc pkg
 max_z_dim = 1  # check noc pkg
+
+max_vc_num = 2  # check noc pkg
 
 num_pe = max_x_dim * max_y_dim * max_z_dim
 
