@@ -26,7 +26,7 @@ make view TEST_NAME=m_axis_ni_tb
 - top_tb
 
 
-## Fix
+## Fix: Ratatoskr router
 
 ## full_noc
 
