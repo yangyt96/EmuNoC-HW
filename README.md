@@ -1,4 +1,5 @@
-
+# EmuNoC Hardware
+This is the hardware of EmuNoC and it is a hybrid emulation prototype to accelerate the verification of Ratatoskr router. This prototype can be configured for different types of NoC IP.
 
 ## Install latest GHDL
 ```
@@ -28,11 +29,11 @@ make view TEST_NAME=m_axis_ni_tb
 
 ## Fix: Ratatoskr router
 
-## full_noc
+### fix 1: full_noc
 
 1. vc_depth_out_array           => ((others => max_packet_len),
 
-##  -- noc_3d_package
+### fix 2: noc_3d_package
 
 1. func 1
 
@@ -65,7 +66,7 @@ make view TEST_NAME=m_axis_ni_tb
   for max_z_dim == 1
 
 
-## switch_allocator.vhd
+### fix 3: switch_allocator.vhd
 
 1. rr_arbiter at vc allocation
 
@@ -92,7 +93,7 @@ make view TEST_NAME=m_axis_ni_tb
 
 ## Requires automation
 1. file: top_axis_validation.vhd
-VARS: ROUTER_CREDIT => 2,
+2. VARS: ROUTER_CREDIT => 2,
 
 ## Fit to FPGA
 1. file:
