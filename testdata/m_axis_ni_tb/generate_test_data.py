@@ -107,9 +107,13 @@ if __name__ == "__main__":
 
     assert len(flit_data) == sum(pkt_len)
 
-    path_inj_time = os.path.join("in", str(port_val), fname_inj_time)
-    path_pkt_len = os.path.join("in", str(port_val), fname_pkt_len)
-    path_flit_data = os.path.join("in", str(port_val), fname_flit_data)
+    path_inj_time = os.path.join("in", fname_inj_time)
+    path_pkt_len = os.path.join("in", fname_pkt_len)
+    path_flit_data = os.path.join("in", fname_flit_data)
+
+    print(path_inj_time)
+    print(path_pkt_len)
+    print(path_flit_data)
 
     to_file(path_inj_time, "\n".join(map(str, inj_time)))
     to_file(path_pkt_len, "\n".join(map(str, pkt_len)))
