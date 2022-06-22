@@ -54,6 +54,18 @@ fname_flit_data = "flit_data.txt"
 # Global variables
 pkt_id = 0
 
+node_to_coord = {}
+coord_to_node = {}
+node = 0
+for z in range(max_z_dim):
+    for y in range(max_y_dim):
+        for x in range(max_x_dim):
+            xyz = (x, y, z)
+            node_to_coord[node] = xyz
+            coord_to_node[xyz] = node
+            print(node, xyz)
+            node += 1
+
 # ----------------------------------------------
 # Functions
 
@@ -119,6 +131,7 @@ if __name__ == "__main__":
     """ Pressure test """
     td = TestData()
 
+    ########################################################################
     # data injection all to all
     data = {}
     time = 0
@@ -133,12 +146,51 @@ if __name__ == "__main__":
 
             tmp.append(create_packet(i, j, 31))
 
-        shuffle(tmp)
+        # shuffle(tmp)
         data["flit_data"].extend(tmp)
 
     data["pkt_len"] = [len(data["flit_data"])]
     td.add(data)
 
+    # ##########################################################################
+    # # test: custom
+    # time = 0
+    # data = {}
+    # data["flit_data"] = [int_to_bin(time, flit_size)]
+    # data["inj_time"] = [time]
+    # data["flit_data"].append(create_packet(0, 1, 31))
+    # data["flit_data"].append(create_packet(0, 2, 31))
+    # data["flit_data"].append(create_packet(0, 3, 31))
+    # data["pkt_len"] = [len(data["flit_data"])]
+    # td.add(data)
+
+    # time = 21
+    # data = {}
+    # data["flit_data"] = [int_to_bin(time, flit_size)]
+    # data["inj_time"] = [time]
+    # data["flit_data"].append(create_packet(2, 1, 27))
+    # data["pkt_len"] = [len(data["flit_data"])]
+    # td.add(data)
+
+    # time = 91
+    # data = {}
+    # data["flit_data"] = [int_to_bin(time, flit_size)]
+    # data["inj_time"] = [time]
+    # data["flit_data"].append(create_packet(1, 3, 4))
+    # data["pkt_len"] = [len(data["flit_data"])]
+    # td.add(data)
+
+    # ##########################################################################
+    # # run to 500
+    # data = {}
+    # data["flit_data"] = [int_to_bin(500, flit_size)]
+    # data["inj_time"] = [0]
+    # data["pkt_len"] = [1]
+    # td.add(data)
+
+    # td.to_txt("in")
+
+    ##########################################################################
     # run to inf
     data = {}
     data["flit_data"] = ["1"*flit_size]
