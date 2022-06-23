@@ -1,27 +1,20 @@
--------------------------------------------------------------------------------
--- Title      :
--- Project    :
--------------------------------------------------------------------------------
--- File       : ring_fifo.vhd
--- Author     : Yee Yang Tan  <yee.yang.tan@ice.rwth-aachen.de>
--- Company    : RWTH Aachen University
--- Created    : 2021-05-22
--- Last update: 2021-05-22
--- Platform   :
--- Standard   : VHDL'93/02
--------------------------------------------------------------------------------
--- Description: Circular FIFO.
---              The data can written to the FIFO at rising_edge(clk), i_wen='1'
---              and o_wvalid='1'.
---              The data can be read from the FIFO at rising_edge(clk), i_ren='1'
---              and o_rvalid='1'.
--------------------------------------------------------------------------------
--- Copyright (c) 2021
--------------------------------------------------------------------------------
--- Revisions  :
--- Date        Version  Author  Description
--- 2021-05-22  1.0      Yang    Created
--------------------------------------------------------------------------------
+------------------------------------------------------------------
+-- COPYRIGHT(c) 2022
+-- INSTITUTE FOR COMMUNICATION TECHNOLOGIES AND EMBEDDED SYSTEMS
+-- RWTH AACHEN
+-- GERMANY
+--
+-- This confidential and proprietary software may be used, copied,
+-- modified, merged, published or distributed according to the
+-- permissions and/or limitations granted by an authorizing license
+-- agreement.
+--
+-- The above copyright notice and this permission notice shall be
+-- included in all copies or substantial portions of the Software.
+--
+-- Author: 1. Tan Yee Yang (tan@ice.rwth-aachen.de)
+--         2. Jan Moritz Joseph (joseph@ice.rwth-aachen.de)
+------------------------------------------------------------------
 
 library ieee;
 use ieee.std_logic_1164.all;

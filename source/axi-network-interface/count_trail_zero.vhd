@@ -1,27 +1,20 @@
--------------------------------------------------------------------------------
--- Title      : Count trailing zero of arbitrary bith width of given positive integer.
--- Project    :
--------------------------------------------------------------------------------
--- File       : count_lead_zero.vhd
--- Author     : Yee Yang Tan  <yee.yang.tan@ice.rwth-aachen.de>
--- Company    : RWTH Aachen University
--- Created    : 2021-10-10
--- Last update: 2021-10-10
--- Platform   :
--- Standard   : VHDL 2008
--------------------------------------------------------------------------------
--- Description: The published paper until now only reveals the method of
---              building count trailing zeros for the number of bit width of
---              power of 2.
---              Moreover, the CNT_WIDTH is the value of clog2(DATA_WIDTH).
---              When DATA_WIDTH = 1, CNT_WIDTH = 1 too.
--------------------------------------------------------------------------------
--- Copyright (c) 2021 Tan Yee Yang
--------------------------------------------------------------------------------
--- Revisions  :
--- Date        Version  Author  Description
--- 2021-10-10  1.0      Yang    Created
--------------------------------------------------------------------------------
+------------------------------------------------------------------
+-- COPYRIGHT(c) 2022
+-- INSTITUTE FOR COMMUNICATION TECHNOLOGIES AND EMBEDDED SYSTEMS
+-- RWTH AACHEN
+-- GERMANY
+--
+-- This confidential and proprietary software may be used, copied,
+-- modified, merged, published or distributed according to the
+-- permissions and/or limitations granted by an authorizing license
+-- agreement.
+--
+-- The above copyright notice and this permission notice shall be
+-- included in all copies or substantial portions of the Software.
+--
+-- Author: 1. Tan Yee Yang (tan@ice.rwth-aachen.de)
+--         2. Jan Moritz Joseph (joseph@ice.rwth-aachen.de)
+------------------------------------------------------------------
 
 library ieee;
 use ieee.std_logic_1164.all;
